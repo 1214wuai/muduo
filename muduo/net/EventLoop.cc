@@ -179,7 +179,7 @@ void EventLoop::runInLoop(Functor cb)
 }
 
 /**
- *
+ * 将回调函数加入到函数队列中
  */
 void EventLoop::queueInLoop(Functor cb)
 {

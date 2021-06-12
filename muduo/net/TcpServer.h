@@ -27,7 +27,7 @@ class EventLoop;
 class EventLoopThreadPool;
 
 ///
-/// TCP server, supports single-threaded and thread-pool models.
+/// TCP server, supports single-threaded and thread-pool models.（tcp服务器，支持单线程和多线程模式）
 ///
 /// This is an interface class, so don't expose too much details.
 class TcpServer : noncopyable
