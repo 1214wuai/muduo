@@ -77,6 +77,9 @@ class InetAddress : public muduo::copyable
   // resolve hostname to IP address, not changing port or sin_family
   // return true on success.
   // thread safe
+  /**
+   * 根据域名获取ip信息
+   */
   static bool resolve(StringArg hostname, InetAddress* result);
   // static std::vector<InetAddress> resolveAll(const char* hostname, uint16_t port = 0);
 

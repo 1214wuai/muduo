@@ -113,8 +113,11 @@ uint16_t InetAddress::port() const
   return sockets::networkToHost16(portNetEndian());
 }
 
-static __thread char t_resolveBuffer[64 * 1024];
+static __thread char t_resolveBuffer[64 * 1024];  // 线程局部变量，__thread变量每一个线程有一份独立实体
 
+/**
+ * 根据域名获取ip信息
+ */
 bool InetAddress::resolve(StringArg hostname, InetAddress* out)
 {
   assert(out != NULL);
@@ -127,7 +130,7 @@ bool InetAddress::resolve(StringArg hostname, InetAddress* out)
   if (ret == 0 && he != NULL)
   {
     assert(he->h_addrtype == AF_INET && he->h_length == sizeof(uint32_t));
-    out->addr_.sin_addr = *reinterpret_cast<struct in_addr*>(he->h_addr);
+    out->addr_.sin_addr = *reinterpret_cast<struct in_addr*>(he->h_addr);  // ip地址
     return true;
   }
   else
