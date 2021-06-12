@@ -25,22 +25,24 @@ namespace sockets
 const struct sockaddr* sockaddr_cast(const struct sockaddr_in6* addr);
 }
 
+/// explicit 构造函数，只允许显式调用，隐式调用一般出现在只有一个输入参数的构造函数
+
 ///
-/// Wrapper of sockaddr_in.
+/// Wrapper of sockaddr_in.（sockaddr_in的封装，更加方便的操作ip和port）
 ///
-/// This is an POD interface class.
+/// This is an POD interface class. todo POD是什么？
 class InetAddress : public muduo::copyable
 {
  public:
-  /// Constructs an endpoint with given port number.
-  /// Mostly used in TcpServer listening.
+  /// Constructs an endpoint with given port number. （输入参数包含 端口号 的构造函数）
+  /// Mostly used in TcpServer listening.（更多使用在tcp服务器监听时）
   explicit InetAddress(uint16_t port = 0, bool loopbackOnly = false, bool ipv6 = false);
 
-  /// Constructs an endpoint with given ip and port.
-  /// @c ip should be "1.2.3.4"
+  /// Constructs an endpoint with given ip and port.（输入参数包含 ip和端口号 的构造函数）
+  /// @c ip should be "1.2.3.4" （ip的格式应该如 1.2.3.4）
   InetAddress(StringArg ip, uint16_t port, bool ipv6 = false);
 
-  /// Constructs an endpoint with given struct @c sockaddr_in
+  /// Constructs an endpoint with given struct @c sockaddr_in （输入参数是sockaddr_in的构造函数）
   /// Mostly used when accepting new connections
   explicit InetAddress(const struct sockaddr_in& addr)
     : addr_(addr)
@@ -50,8 +52,17 @@ class InetAddress : public muduo::copyable
     : addr6_(addr)
   { }
 
+  /**
+   * 返回协议族
+   */
   sa_family_t family() const { return addr_.sin_family; }
+  /**
+   * 转换成文本可视的IP
+   */
   string toIp() const;
+  /**
+   * 转换成文本可视的IP和PORT
+   */
   string toIpPort() const;
   uint16_t port() const;
 
@@ -73,7 +84,7 @@ class InetAddress : public muduo::copyable
   void setScopeId(uint32_t scope_id);
 
  private:
-  union
+  union /// 对于要么ipv4，要么ipv6的情况，使用联合再合适不过
   {
     struct sockaddr_in addr_;
     struct sockaddr_in6 addr6_;

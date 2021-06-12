@@ -51,7 +51,7 @@ void setNonBlockAndCloseOnExec(int sockfd)
 
 const struct sockaddr* sockets::sockaddr_cast(const struct sockaddr_in6* addr)
 {
-  return static_cast<const struct sockaddr*>(implicit_cast<const void*>(addr));
+  return static_cast<const struct sockaddr*>(implicit_cast<const void*>(addr));  // implicit_cast隐式转换 类似c的内置类型赋值，static_cast类似于c的强制类型转换
 }
 
 struct sockaddr* sockets::sockaddr_cast(struct sockaddr_in6* addr)
@@ -221,7 +221,7 @@ void sockets::toIp(char* buf, size_t size,
   {
     assert(size >= INET_ADDRSTRLEN);
     const struct sockaddr_in* addr4 = sockaddr_in_cast(addr);
-    ::inet_ntop(AF_INET, &addr4->sin_addr, buf, static_cast<socklen_t>(size));
+    ::inet_ntop(AF_INET, &addr4->sin_addr, buf, static_cast<socklen_t>(size));  // inet_ntop是一个IP地址转换函数，二进制网络字节序的IP地址转换为点分文本的IP地址
   }
   else if (addr->sa_family == AF_INET6)
   {

@@ -17,7 +17,7 @@ namespace muduo
 {
 namespace net
 {
-namespace sockets
+namespace sockets // 一些与sockets相关的公共函数
 {
 
 ///
