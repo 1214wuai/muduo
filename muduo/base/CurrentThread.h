@@ -13,7 +13,7 @@ namespace muduo
 namespace CurrentThread
 {
   // internal
-  extern __thread int t_cachedTid;
+  extern __thread int t_cachedTid;  // 线程局部变量
   extern __thread char t_tidString[32];
   extern __thread int t_tidStringLength;
   extern __thread const char* t_threadName;
@@ -23,6 +23,7 @@ namespace CurrentThread
   {
     if (__builtin_expect(t_cachedTid == 0, 0))
     {
+      // 缓存线程id到t_cachedTid和t_tidString中
       cacheTid();
     }
     return t_cachedTid;

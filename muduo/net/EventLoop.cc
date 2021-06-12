@@ -32,6 +32,7 @@ const int kPollTimeMs = 10000;
 
 int createEventfd()
 {
+  // 创建一个事件fd，专门用来唤起 poll/epoll
   int evtfd = ::eventfd(0, EFD_NONBLOCK | EFD_CLOEXEC);
   if (evtfd < 0)
   {
@@ -84,9 +85,13 @@ EventLoop::EventLoop()
   {
     t_loopInThisThread = this;
   }
+
+  // 设置读事件回调函数
   wakeupChannel_->setReadCallback(
       std::bind(&EventLoop::handleRead, this));
   // we are always reading the wakeupfd
+
+  // 使能监听读事件
   wakeupChannel_->enableReading();
 }
 
@@ -100,8 +105,12 @@ EventLoop::~EventLoop()
   t_loopInThisThread = NULL;
 }
 
+/**
+ * 事件循环
+ */
 void EventLoop::loop()
 {
+  // 判断是否重复开始事件循环
   assert(!looping_);
   assertInLoopThread();
   looping_ = true;
@@ -111,21 +120,31 @@ void EventLoop::loop()
   while (!quit_)
   {
     activeChannels_.clear();
+
+    // 1.等待事件
     pollReturnTime_ = poller_->poll(kPollTimeMs, &activeChannels_);
+
+    // 记录循环次数
     ++iteration_;
+
     if (Logger::logLevel() <= Logger::TRACE)
     {
       printActiveChannels();
     }
-    // TODO sort channel by priority
+    // TODO sort channel by priority（按照优先级对通道排序）
+
+    // 2.处理事件
     eventHandling_ = true;
     for (Channel* channel : activeChannels_)
     {
       currentActiveChannel_ = channel;
+      // 执行事件对应的处理函数
       currentActiveChannel_->handleEvent(pollReturnTime_);
     }
     currentActiveChannel_ = NULL;
     eventHandling_ = false;
+
+    // 3.处理未执行的函数 todo 暂时不知道哪种业务场景使用这个比较合适
     doPendingFunctors();
   }
 
@@ -147,24 +166,29 @@ void EventLoop::quit()
 
 void EventLoop::runInLoop(Functor cb)
 {
-  if (isInLoopThread())
+  if (isInLoopThread())   // 当前执行的线程 是 eventloop的控制线程才可直接执行cb()
   {
     cb();
   }
   else
   {
+    // 1.如果当前线程不是eventloop的控制线程，则将cb加入到eventloop的函数队列中
+    // 2.并唤醒 eventloop的控制线程
     queueInLoop(std::move(cb));
   }
 }
 
+/**
+ *
+ */
 void EventLoop::queueInLoop(Functor cb)
 {
   {
-  MutexLockGuard lock(mutex_);
+  MutexLockGuard lock(mutex_);  // 守护锁，离开作用域后会自动释放锁
   pendingFunctors_.push_back(std::move(cb));
   }
 
-  if (!isInLoopThread() || callingPendingFunctors_)
+  if (!isInLoopThread() || callingPendingFunctors_)  // todo eventloop是否在处理函数是不是应该都需要唤醒？
   {
     wakeup();
   }

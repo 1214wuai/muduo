@@ -137,6 +137,7 @@ class EventLoop : noncopyable
 
   typedef std::vector<Channel*> ChannelList;
 
+  // 当前事件循环是否正在运行
   bool looping_; /* atomic */
   std::atomic<bool> quit_;
   bool eventHandling_; /* atomic */
@@ -149,6 +150,7 @@ class EventLoop : noncopyable
   int wakeupFd_;
   // unlike in TimerQueue, which is an internal class,
   // we don't expose Channel to client.
+  // 专用于唤醒 poll/epoll
   std::unique_ptr<Channel> wakeupChannel_;
   boost::any context_;
 
@@ -156,7 +158,9 @@ class EventLoop : noncopyable
   ChannelList activeChannels_;
   Channel* currentActiveChannel_;
 
+  // 保证pendingFunctors_线程安全
   mutable MutexLock mutex_;
+  // 未执行（等待执行）的函数列表
   std::vector<Functor> pendingFunctors_ GUARDED_BY(mutex_);
 };
 
