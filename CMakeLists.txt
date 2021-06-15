@@ -4,6 +4,11 @@ project(muduo)
 include_directories(.)
 include_directories(muduo/base)
 include_directories(muduo/net)
+include_directories(muduo/net/http)
+include_directories(muduo/net/inspect)
+include_directories(muduo/net/poller)
+include_directories(muduo/net/protobuf)
+include_directories(muduo/net/protorpc)
 
 # 远程
 include_directories(/usr/include)

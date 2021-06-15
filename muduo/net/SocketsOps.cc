@@ -186,11 +186,16 @@ void sockets::close(int sockfd)
 
 void sockets::shutdownWrite(int sockfd)
 {
-  if (::shutdown(sockfd, SHUT_WR) < 0)
+  if (::shutdown(sockfd, SHUT_WR) < 0)  // 优雅的关闭套接字
+      // 当调用write时，此时是将数据写入了向“写缓冲区”，此刻如果需要关闭套接字，不知道“写缓冲”中数据是否已经发送出去，此刻就可以调用shutdown，优雅的关闭
   {
     LOG_SYSERR << "sockets::shutdownWrite";
   }
 }
+
+/// SHUT_RD：断开输入流。套接字无法接收数据（即使输入缓冲区收到数据也被抹去），无法调用输入相关函数。
+/// SHUT_WR：断开输出流。套接字无法发送数据，但如果输出缓冲区中还有未传输的数据，则将传递到目标主机。
+/// SHUT_RDWR：同时断开 I/O 流。相当于分两次调用 shutdown()，其中一次以 SHUT_RD 为参数，另一次以 SHUT_WR 为参数
 
 void sockets::toIpPort(char* buf, size_t size,
                        const struct sockaddr* addr)

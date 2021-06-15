@@ -68,13 +68,17 @@ void TcpServer::start()
   }
 }
 
+// accepter 触发读事件后，会调用该函数
 void TcpServer::newConnection(int sockfd, const InetAddress& peerAddr)
 {
+  // 校验当前执行流线程 是否是 loop的创建线程
   loop_->assertInLoopThread();
+
+  // 线程池中每个线程 管理一个 poll，获取其他中一个loop
   EventLoop* ioLoop = threadPool_->getNextLoop();
   char buf[64];
   snprintf(buf, sizeof buf, "-%s#%d", ipPort_.c_str(), nextConnId_);
-  ++nextConnId_;
+  ++nextConnId_;  // 计算当前连接
   string connName = name_ + buf;
 
   LOG_INFO << "TcpServer::newConnection [" << name_
@@ -89,6 +93,7 @@ void TcpServer::newConnection(int sockfd, const InetAddress& peerAddr)
                                           localAddr,
                                           peerAddr));
   connections_[connName] = conn;
+
   conn->setConnectionCallback(connectionCallback_);
   conn->setMessageCallback(messageCallback_);
   conn->setWriteCompleteCallback(writeCompleteCallback_);
