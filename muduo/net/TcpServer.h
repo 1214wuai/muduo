@@ -111,6 +111,8 @@ class TcpServer : noncopyable
   AtomicInt32 started_;
   // always in loop thread
   int nextConnId_;
+
+  // 保存每个链接
   ConnectionMap connections_;
 };
 

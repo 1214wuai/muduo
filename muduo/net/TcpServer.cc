@@ -71,10 +71,10 @@ void TcpServer::start()
 // accepter 触发读事件后，会调用该函数
 void TcpServer::newConnection(int sockfd, const InetAddress& peerAddr)
 {
-  // 校验当前执行流线程 是否是 loop的创建线程
+  // 校验当前执行流线程 是否是 EventLoop的创建线程
   loop_->assertInLoopThread();
 
-  // 线程池中每个线程 管理一个 poll，获取其他中一个loop
+  // 线程池中每个线程 都管理一个 EventLoop，获取其中一个EventLoop
   EventLoop* ioLoop = threadPool_->getNextLoop();
   char buf[64];
   snprintf(buf, sizeof buf, "-%s#%d", ipPort_.c_str(), nextConnId_);
@@ -94,11 +94,14 @@ void TcpServer::newConnection(int sockfd, const InetAddress& peerAddr)
                                           peerAddr));
   connections_[connName] = conn;
 
+  // 为新链接设置connect
   conn->setConnectionCallback(connectionCallback_);
   conn->setMessageCallback(messageCallback_);
   conn->setWriteCompleteCallback(writeCompleteCallback_);
   conn->setCloseCallback(
       std::bind(&TcpServer::removeConnection, this, _1)); // FIXME: unsafe
+
+  // 将accept到一个新链接交给线程池中的一个EventLoop管理
   ioLoop->runInLoop(std::bind(&TcpConnection::connectEstablished, conn));
 }
 
