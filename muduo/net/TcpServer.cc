@@ -32,7 +32,7 @@ TcpServer::TcpServer(EventLoop* loop,
     messageCallback_(defaultMessageCallback),
     nextConnId_(1)
 {
-  acceptor_->setNewConnectionCallback(
+  acceptor_->setNewConnectionCallback(  // 监听套接字获取到新链接后就会执行该回调函数
       std::bind(&TcpServer::newConnection, this, _1, _2));
 }
 
@@ -58,13 +58,14 @@ void TcpServer::setThreadNum(int numThreads)
 
 void TcpServer::start()
 {
-  if (started_.getAndSet(1) == 0)
+  if (started_.getAndSet(1) == 0)  // 将started_当前数值返回，并设置成新传入的值
   {
     threadPool_->start(threadInitCallback_);  // 初始化事件循环线程池
 
-    assert(!acceptor_->listening());
+    assert(!acceptor_->listening());  // 判断是否是监听中
     loop_->runInLoop(
         std::bind(&Acceptor::listen, get_pointer(acceptor_)));
+    /// 可将std::bind函数看作一个通用的函数适配器，它接受一个可调用对象，生成一个新的可调用对象来“适应”原对象的参数列表。
   }
 }
 
@@ -78,7 +79,7 @@ void TcpServer::newConnection(int sockfd, const InetAddress& peerAddr)
   EventLoop* ioLoop = threadPool_->getNextLoop();
   char buf[64];
   snprintf(buf, sizeof buf, "-%s#%d", ipPort_.c_str(), nextConnId_);
-  ++nextConnId_;  // 计算当前连接
+  ++nextConnId_;  // 统计当前连接数
   string connName = name_ + buf;
 
   LOG_INFO << "TcpServer::newConnection [" << name_
