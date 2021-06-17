@@ -22,6 +22,7 @@ namespace net
 
 class EventLoop;
 
+/// 专门处理io事件的线程（线程行为已确定）， 该线程管理了一个EventLoop
 class EventLoopThread : noncopyable
 {
  public:
@@ -38,8 +39,8 @@ class EventLoopThread : noncopyable
   EventLoop* loop_ GUARDED_BY(mutex_);
   bool exiting_;
   Thread thread_;
-  MutexLock mutex_;
-  Condition cond_ GUARDED_BY(mutex_);
+  MutexLock mutex_;  // 保证临界区是线程安全的，loop_ 就是临界区
+  Condition cond_ GUARDED_BY(mutex_);  // 该条件变量的条件是线程开始启动事件循环（loop_不为空）， 通过cond_来排队，等待、通知
   ThreadInitCallback callback_;
 };
 

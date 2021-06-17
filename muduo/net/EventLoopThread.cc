@@ -46,19 +46,20 @@ EventLoop* EventLoopThread::startLoop()
     MutexLockGuard lock(mutex_);
     while (loop_ == NULL)
     {
-      cond_.wait();
+      cond_.wait();  // 等待loop_不为空，等待线程启动事件循环（等到条件达成）
     }
-    loop = loop_;
+    loop = loop_;  // 这里指向一个局部变量的EventLoop
   }
 
   return loop;
 }
 
+// 线程行为：创建一个EventLoop，并开始事件循环
 void EventLoopThread::threadFunc()
 {
   EventLoop loop;
 
-  if (callback_)
+  if (callback_)  // 线程初始化回调
   {
     callback_(&loop);
   }
@@ -66,12 +67,12 @@ void EventLoopThread::threadFunc()
   {
     MutexLockGuard lock(mutex_);
     loop_ = &loop;
-    cond_.notify();
+    cond_.notify();  // 通知等待的执行流，表示条件已经达成，loop_不为空了
   }
 
-  loop.loop();
+  loop.loop();  // 启动事件循环
   //assert(exiting_);
   MutexLockGuard lock(mutex_);
-  loop_ = NULL;
+  loop_ = NULL;  // 结束事件循环后设置loop_为空
 }
 
