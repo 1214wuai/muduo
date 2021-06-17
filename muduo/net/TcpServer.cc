@@ -23,11 +23,11 @@ TcpServer::TcpServer(EventLoop* loop,
                      const InetAddress& listenAddr,
                      const string& nameArg,
                      Option option)
-  : loop_(CHECK_NOTNULL(loop)),
+  : loop_(CHECK_NOTNULL(loop)),  // 外部传入的一个EventLoop
     ipPort_(listenAddr.toIpPort()),
     name_(nameArg),
-    acceptor_(new Acceptor(loop, listenAddr, option == kReusePort)),
-    threadPool_(new EventLoopThreadPool(loop, name_)),
+    acceptor_(new Acceptor(loop, listenAddr, option == kReusePort)),  // 监听套接字
+    threadPool_(new EventLoopThreadPool(loop, name_)),  // 事件循环线程池
     connectionCallback_(defaultConnectionCallback),
     messageCallback_(defaultMessageCallback),
     nextConnId_(1)
@@ -60,7 +60,7 @@ void TcpServer::start()
 {
   if (started_.getAndSet(1) == 0)
   {
-    threadPool_->start(threadInitCallback_);
+    threadPool_->start(threadInitCallback_);  // 初始化事件循环线程池
 
     assert(!acceptor_->listening());
     loop_->runInLoop(
