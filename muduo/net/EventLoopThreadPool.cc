@@ -37,13 +37,13 @@ void EventLoopThreadPool::start(const ThreadInitCallback& cb)
 
   started_ = true;
 
-  for (int i = 0; i < numThreads_; ++i)
+  for (int i = 0; i < numThreads_; ++i)  // 批量创建事件循环线程
   {
     char buf[name_.size() + 32];
     snprintf(buf, sizeof buf, "%s%d", name_.c_str(), i);
     EventLoopThread* t = new EventLoopThread(cb, buf);
     threads_.push_back(std::unique_ptr<EventLoopThread>(t));
-    loops_.push_back(t->startLoop());
+    loops_.push_back(t->startLoop());  // 存储每个线程的EventLoop
   }
   if (numThreads_ == 0 && cb)
   {
@@ -60,7 +60,7 @@ EventLoop* EventLoopThreadPool::getNextLoop()
   if (!loops_.empty())
   {
     // round-robin
-    loop = loops_[next_];
+    loop = loops_[next_];  // 获取某个线程的EventLoop，并返回
     ++next_;
     if (implicit_cast<size_t>(next_) >= loops_.size())
     {
