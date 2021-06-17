@@ -97,12 +97,12 @@ void TcpServer::newConnection(int sockfd, const InetAddress& peerAddr)
 
   // 为新链接设置connect
   conn->setConnectionCallback(connectionCallback_);
-  conn->setMessageCallback(messageCallback_);
+  conn->setMessageCallback(messageCallback_);  // 设置读事件处理回调函数
   conn->setWriteCompleteCallback(writeCompleteCallback_);
   conn->setCloseCallback(
       std::bind(&TcpServer::removeConnection, this, _1)); // FIXME: unsafe
 
-  // 将accept到一个新链接交给线程池中的一个EventLoop管理
+  // 让EventLoop所属的线程 将连接 加入到该让EventLoop
   ioLoop->runInLoop(std::bind(&TcpConnection::connectEstablished, conn));
 }
 
