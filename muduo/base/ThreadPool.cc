@@ -35,7 +35,7 @@ void ThreadPool::start(int numThreads)
   assert(threads_.empty());
   running_ = true;
   threads_.reserve(numThreads);
-  for (int i = 0; i < numThreads; ++i)
+  for (int i = 0; i < numThreads; ++i)  // 批量创建线程
   {
     char id[32];
     snprintf(id, sizeof id, "%d", i+1);
@@ -90,25 +90,26 @@ void ThreadPool::run(Task task)
   }
 }
 
+// 从任务队列中取出一个任务
 ThreadPool::Task ThreadPool::take()
 {
-  MutexLockGuard lock(mutex_);
+  MutexLockGuard lock(mutex_);  // 加锁
   // always use a while-loop, due to spurious wakeup
   while (queue_.empty() && running_)
   {
-    notEmpty_.wait();
+    notEmpty_.wait();  // 判断是否符合条件（不为空），不符合这里会释放锁并阻塞
   }
   Task task;
   if (!queue_.empty())
   {
-    task = queue_.front();
+    task = queue_.front();  // 从任务队列里取出任务
     queue_.pop_front();
     if (maxQueueSize_ > 0)
     {
       notFull_.notify();
     }
   }
-  return task;
+  return task;  // 返回任务
 }
 
 bool ThreadPool::isFull() const
@@ -127,9 +128,11 @@ void ThreadPool::runInThread()
     }
     while (running_)
     {
+      // 从任务队列中取出一个任务
       Task task(take());
       if (task)
       {
+        // 执行任务
         task();
       }
     }
