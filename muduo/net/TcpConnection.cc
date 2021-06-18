@@ -142,7 +142,7 @@ void TcpConnection::sendInLoop(const void* data, size_t len)
   ssize_t nwrote = 0;
   size_t remaining = len;
   bool faultError = false;
-  if (state_ == kDisconnected)
+  if (state_ == kDisconnected)  // 判断当前链接状态，如果断连，放弃写入
   {
     LOG_WARN << "disconnected, give up writing";
     return;

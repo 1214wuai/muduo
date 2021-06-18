@@ -39,7 +39,7 @@ namespace net
 /// |                   |                  |                  |
 /// 0      <=      readerIndex   <=   writerIndex    <=     size
 /// @endcode
-class Buffer : public muduo::copyable
+class Buffer : public muduo::copyable  // 缓存类
 {
  public:
   static const size_t kCheapPrepend = 8;
@@ -65,30 +65,31 @@ class Buffer : public muduo::copyable
     std::swap(writerIndex_, rhs.writerIndex_);
   }
 
-  size_t readableBytes() const
+  size_t readableBytes() const  // 缓存中可读字节数
   { return writerIndex_ - readerIndex_; }
 
-  size_t writableBytes() const
+  size_t writableBytes() const  // 缓存中可写字节数
   { return buffer_.size() - writerIndex_; }
 
   size_t prependableBytes() const
   { return readerIndex_; }
 
-  const char* peek() const
+  const char* peek() const  //  只读数据（看一眼数据），不会移动读指针
   { return begin() + readerIndex_; }
 
-  const char* findCRLF() const
+  const char* findCRLF() const  // 搜索可读取数据中第一个 "\r\n"，并返回其地址
   {
     // FIXME: replace with memmem()?
+    // 在字符串中搜索子字符串
     const char* crlf = std::search(peek(), beginWrite(), kCRLF, kCRLF+2);
     return crlf == beginWrite() ? NULL : crlf;
   }
 
-  const char* findCRLF(const char* start) const
+  const char* findCRLF(const char* start) const  // 搜索可读数据自定义范围中第一个 "\r\n"，并返回其地址
   {
     assert(peek() <= start);
     assert(start <= beginWrite());
-    // FIXME: replace with memmem()?
+    // FIXME: replace with memmem()?  memmem与strstr类似
     const char* crlf = std::search(start, beginWrite(), kCRLF, kCRLF+2);
     return crlf == beginWrite() ? NULL : crlf;
   }
@@ -113,13 +114,13 @@ class Buffer : public muduo::copyable
   void retrieve(size_t len)
   {
     assert(len <= readableBytes());
-    if (len < readableBytes())
+    if (len < readableBytes())  // len小于当可读数据数，说明buffer中还有需要被读取的数据
     {
-      readerIndex_ += len;
+      readerIndex_ += len;  // 增加读指针
     }
-    else
+    else  // 表示缓存数据都已读完
     {
-      retrieveAll();
+      retrieveAll();  // 恢复buffer到初始状态
     }
   }
 
@@ -182,7 +183,7 @@ class Buffer : public muduo::copyable
   void append(const char* /*restrict*/ data, size_t len)
   {
     ensureWritableBytes(len);
-    std::copy(data, data+len, beginWrite());
+    std::copy(data, data+len, beginWrite());  // fist -> last copy to result
     hasWritten(len);
   }
 
@@ -387,7 +388,7 @@ class Buffer : public muduo::copyable
   const char* begin() const
   { return &*buffer_.begin(); }
 
-  void makeSpace(size_t len)
+  void makeSpace(size_t len)  // 容量不够则扩容
   {
     if (writableBytes() + prependableBytes() < len + kCheapPrepend)
     {
@@ -409,11 +410,11 @@ class Buffer : public muduo::copyable
   }
 
  private:
-  std::vector<char> buffer_;
-  size_t readerIndex_;
-  size_t writerIndex_;
+  std::vector<char> buffer_;  // 储存缓存数据，可扩容
+  size_t readerIndex_;  // 记录读指针，从buffer读取n字节，读指针+n
+  size_t writerIndex_;  // 记录写指针，向buffer写入n字节，写指针+n
 
-  static const char kCRLF[];
+  static const char kCRLF[];  // "\r\n"
 };
 
 }  // namespace net
