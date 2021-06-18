@@ -59,7 +59,7 @@ class HttpServer : noncopyable
   void onRequest(const TcpConnectionPtr&, const HttpRequest&);
 
   TcpServer server_;
-  HttpCallback httpCallback_;
+  HttpCallback httpCallback_;  // http业务逻辑处理回调函数，这里做业务逻辑处理
 };
 
 }  // namespace net

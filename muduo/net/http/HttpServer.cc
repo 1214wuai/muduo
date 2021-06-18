@@ -44,7 +44,7 @@ HttpServer::HttpServer(EventLoop* loop,
 {
   server_.setConnectionCallback(
       std::bind(&HttpServer::onConnection, this, _1));
-  server_.setMessageCallback(
+  server_.setMessageCallback(  // 设置tcpserver中每个连接的消息处理回调用（每个连接的读事件）
       std::bind(&HttpServer::onMessage, this, _1, _2, _3));
 }
 
@@ -63,19 +63,22 @@ void HttpServer::onConnection(const TcpConnectionPtr& conn)
   }
 }
 
+// 每个链接出发读事件后会调用该回调函数
 void HttpServer::onMessage(const TcpConnectionPtr& conn,
                            Buffer* buf,
                            Timestamp receiveTime)
 {
-  HttpContext* context = boost::any_cast<HttpContext>(conn->getMutableContext());
+  HttpContext* context = boost::any_cast<HttpContext>(conn->getMutableContext());  // 获取连接的http上下文
 
+  // buff中是连接另一端发过来的消息，进行解析
+  // 如果解析失败，直接报错
   if (!context->parseRequest(buf, receiveTime))
   {
     conn->send("HTTP/1.1 400 Bad Request\r\n\r\n");
     conn->shutdown();
   }
 
-  if (context->gotAll())
+  if (context->gotAll())  // state_ == kGotAll表示已经解析了一个完整的请求包，可以进行处理了
   {
     onRequest(conn, context->request());
     context->reset();
@@ -88,10 +91,10 @@ void HttpServer::onRequest(const TcpConnectionPtr& conn, const HttpRequest& req)
   bool close = connection == "close" ||
     (req.getVersion() == HttpRequest::kHttp10 && connection != "Keep-Alive");
   HttpResponse response(close);
-  httpCallback_(req, &response);
+  httpCallback_(req, &response);  // 执行业务逻辑
   Buffer buf;
-  response.appendToBuffer(&buf);
-  conn->send(&buf);
+  response.appendToBuffer(&buf);  // 将响应结构序列化成http响应包并写入到buf中
+  conn->send(&buf); // 写入到写缓冲区
   if (response.closeConnection())
   {
     conn->shutdown();

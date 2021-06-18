@@ -156,6 +156,7 @@ void TcpConnection::sendInLoop(const void* data, size_t len)
       remaining = len - nwrote;
       if (remaining == 0 && writeCompleteCallback_)
       {
+        // 没有将缓存区中的数据写完就继续写入
         loop_->queueInLoop(std::bind(writeCompleteCallback_, shared_from_this()));
       }
     }
@@ -194,9 +195,9 @@ void TcpConnection::sendInLoop(const void* data, size_t len)
 void TcpConnection::shutdown()
 {
   // FIXME: use compare and swap
-  if (state_ == kConnected)
+  if (state_ == kConnected)  // 最好使用cas操作，来保证线程安全
   {
-    setState(kDisconnecting);
+    setState(kDisconnecting);  // 设置完后，写入时候会判断改标志位，所以将不会再有数据写入
     // FIXME: shared_from_this()?
     loop_->runInLoop(std::bind(&TcpConnection::shutdownInLoop, this));
   }
@@ -205,10 +206,10 @@ void TcpConnection::shutdown()
 void TcpConnection::shutdownInLoop()
 {
   loop_->assertInLoopThread();
-  if (!channel_->isWriting())
+  if (!channel_->isWriting())  // 如果当前没有链接没有写事件被监听（说明buffer中数据都已经写入写缓冲区），就可以优雅的关闭
   {
     // we are not writing
-    socket_->shutdownWrite();
+    socket_->shutdownWrite();  // 优雅的关闭写连接，不允许再写入数据到写缓冲区，同时会将写缓冲区中的数据都发送后，关闭连接
   }
 }
 

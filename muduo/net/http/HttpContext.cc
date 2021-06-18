@@ -61,21 +61,21 @@ bool HttpContext::parseRequest(Buffer* buf, Timestamp receiveTime)
 {
   bool ok = true;
   bool hasMore = true;
-  while (hasMore)
+  while (hasMore)  // 解析请求包状态机，这么做的原因在于buf中可能不是完整的请求包，所以分段来解析
   {
-    if (state_ == kExpectRequestLine)
+    if (state_ == kExpectRequestLine)  // 当前需要解析请求行
     {
       const char* crlf = buf->findCRLF();
       if (crlf)
       {
-        ok = processRequestLine(buf->peek(), crlf);
-        if (ok)
+        ok = processRequestLine(buf->peek(), crlf);  // 返回解析请求行解析结果
+        if (ok)  // 请求行解析成功则继续
         {
           request_.setReceiveTime(receiveTime);
-          buf->retrieveUntil(crlf + 2);
-          state_ = kExpectHeaders;
+          buf->retrieveUntil(crlf + 2);  // 移动缓存中的读指针
+          state_ = kExpectHeaders;  // 下一步解析请求头
         }
-        else
+        else  // 解析请求行失败，直接退出状态机
         {
           hasMore = false;
         }
@@ -85,21 +85,21 @@ bool HttpContext::parseRequest(Buffer* buf, Timestamp receiveTime)
         hasMore = false;
       }
     }
-    else if (state_ == kExpectHeaders)
+    else if (state_ == kExpectHeaders)  // 解析请求头
     {
-      const char* crlf = buf->findCRLF();
-      if (crlf)
+      const char* crlf = buf->findCRLF();  // 找到 "\r\n" 所在位置
+      if (crlf)  // 没有找到 '\r\n',直接退出状态机
       {
         const char* colon = std::find(buf->peek(), crlf, ':');
         if (colon != crlf)
         {
           request_.addHeader(buf->peek(), colon, crlf);
         }
-        else
+        else  // todo starsli 这里的判断空行并不标准，需要验证一下，这里居然以没有发现':'就当成空行
         {
           // empty line, end of header
           // FIXME:
-          state_ = kGotAll;
+          state_ = kGotAll;  // 遇到空行，准备下一步解析，剩下的全都是响应体
           hasMore = false;
         }
         buf->retrieveUntil(crlf + 2);

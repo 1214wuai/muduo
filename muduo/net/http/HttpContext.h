@@ -25,12 +25,12 @@ class Buffer;
 class HttpContext : public muduo::copyable
 {
  public:
-  enum HttpRequestParseState
+  enum HttpRequestParseState  // 表示当前解析请求包的状态（进度）
   {
-    kExpectRequestLine,
-    kExpectHeaders,
-    kExpectBody,
-    kGotAll,
+    kExpectRequestLine,  // 期望请求行
+    kExpectHeaders,  // 期望请求头
+    kExpectBody,  // 期望请求体
+    kGotAll,  // 获取所有
   };
 
   HttpContext()
