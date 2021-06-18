@@ -154,7 +154,7 @@ void TcpConnection::sendInLoop(const void* data, size_t len)
     if (nwrote >= 0)
     {
       remaining = len - nwrote;
-      if (remaining == 0 && writeCompleteCallback_)
+      if (remaining == 0 && writeCompleteCallback_)  // remaining == 0表示什么都没有写进去， 没写完，这块有些问题
       {
         // 没有将缓存区中的数据写完就继续写入
         loop_->queueInLoop(std::bind(writeCompleteCallback_, shared_from_this()));
