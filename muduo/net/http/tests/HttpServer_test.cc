@@ -51,6 +51,13 @@ void onRequest(const HttpRequest& req, HttpResponse* resp)
     resp->addHeader("Server", "Muduo");
     resp->setBody("hello, world!\n");
   }
+  else if (req.path() == "/download_test") {
+    resp->setStatusCode(HttpResponse::k200Ok);
+    resp->setStatusMessage("OK");
+    resp->setContentType("application/octet-stream");  // 二进制流
+    resp->addHeader("Server", "Muduo");
+    resp->setBody("hello, world!\n");
+  }
   else
   {
     resp->setStatusCode(HttpResponse::k404NotFound);
