@@ -69,6 +69,7 @@ size_t ThreadPool::queueSize() const
   return queue_.size();
 }
 
+// 向任务队列里面添加任务
 void ThreadPool::run(Task task)
 {
   if (threads_.empty())
@@ -86,7 +87,7 @@ void ThreadPool::run(Task task)
     assert(!isFull());
 
     queue_.push_back(std::move(task));
-    notEmpty_.notify();
+    notEmpty_.notify();  // 唤醒一个消费者
   }
 }
 
