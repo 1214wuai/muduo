@@ -10,7 +10,9 @@
 #include <stdio.h>
 
 using namespace muduo;
-
+//必须用带有初始化列表的构造函数：
+//1.成员类型是没有默认构造函数的类。若没有提供显示初始化式，则编译器隐式使用成员类型的默认构造函数，若类没有默认构造函数，则编译器尝试使用默认构造函数将会失败。
+//2.const 成员或引用类型的成员。因为 const 对象或引用类型只能初始化，不能对他们赋值。
 AsyncLogging::AsyncLogging(const string& basename,
                            off_t rollSize,
                            int flushInterval)

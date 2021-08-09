@@ -116,6 +116,7 @@ inline To down_cast(From* f)                     // so we only accept pointers
   assert(f == NULL || dynamic_cast<To>(f) != NULL);  // RTTI: debug mode only!
 #endif
   return static_cast<To>(f);
+  //C++ÀàÐÍ×ª»»:static_cast¡¢reinterpret_cast¡¢const_cast¡¢dynamic_cast
 }
 
 }  // namespace muduo

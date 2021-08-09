@@ -26,6 +26,8 @@ namespace detail
 pid_t gettid()
 {
   return static_cast<pid_t>(::syscall(SYS_gettid));
+  //有一个真实的线程id唯一标识，tid
+  //通过linux下的系统调用syscall(SYS_gettid)来获得。
 }
 
 void afterFork()
@@ -119,7 +121,7 @@ void CurrentThread::cacheTid()
 {
   if (t_cachedTid == 0)
   {
-    t_cachedTid = detail::gettid();
+    t_cachedTid = detail::gettid();//获取线程ID，进程描述符结构体中的pid_t pid
     t_tidStringLength = snprintf(t_tidString, sizeof t_tidString, "%5d ", t_cachedTid);
   }
 }

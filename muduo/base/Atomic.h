@@ -39,12 +39,18 @@ class AtomicIntegerT : noncopyable
   T get()
   {
     // in gcc >= 4.7: __atomic_load_n(&value_, __ATOMIC_SEQ_CST)
+    // GCC内置原子操作
+    // 对1、2、4、8字节的数值或指针类型，进行原子加/减/与/或/异或等操作。
+    // type __sync_val_compare_and_swap (type *ptr, type oldval type newval, ...)
+    // 比较*ptr与oldval的值，如果两者相等，则将newval更新到*ptr并返回操作之前*ptr的值
     return __sync_val_compare_and_swap(&value_, 0, 0);
   }
 
   T getAndAdd(T x)
   {
     // in gcc >= 4.7: __atomic_fetch_add(&value_, x, __ATOMIC_SEQ_CST)
+    //type __sync_fetch_and_add (type *ptr, type value, ...)
+    // 将value加到*ptr上，结果更新到*ptr，并返回操作之前*ptr的值
     return __sync_fetch_and_add(&value_, x);
   }
 
