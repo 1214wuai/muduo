@@ -29,6 +29,14 @@ class CountDownLatch : noncopyable
   Condition condition_ GUARDED_BY(mutex_);
   int count_ GUARDED_BY(mutex_);
 };
+/*
+GUARDED_BY(mutex_)
+THREAD_ANNOTATION_ATTRIBUTE__(guarded_by(mutex_))
+__attribute__((guarded_by(mutex_))
+guarded_by属性是为了保证线程安全，使用该属性后，线程要使用相应变量，必须先锁定mutex_
 
+线程安全注解
+GUARDED_BY//声明数据成员受给定功能保护。对数据的读取操作需要共享访问，而写入操作需要独占访问。
+*/
 }  // namespace muduo
 #endif  // MUDUO_BASE_COUNTDOWNLATCH_H

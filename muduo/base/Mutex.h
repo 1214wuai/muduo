@@ -16,6 +16,28 @@
 
 // Enable thread safety attributes only with clang.
 // The attributes can be safely erased when compiling with other compilers.
+
+//CAPABILITY//该宏负责指定相关的类使用线程安全检测机制，即标准文档所说的功能，用于直接修饰类
+//SCOPED_CAPABILITY//负责实现RAII样式锁定的类属性，即在构造时获取能力，析构时释放能力。其他和CAPABILITY类似。
+//GUARDED_BY//声明数据成员受给定功能保护。对数据的读取操作需要共享访问，而写入操作需要独占访问。
+//PT_GUARDED_BY和GUARDED_BY类似，用于指针和智能指针，用户保护指针指向的数据。
+//ACQUIRED_BEFORE需要在另一个能力获取之前被调用
+//ACQUIRED_AFTER需要在另一个能力获取之后被调用
+//REQUIRES用来修饰函数，使其调用线程必须具有对给定功能的独占访问权限。被修饰的函数在进入前必须已经持有能力，函数退出时不在持有能力。
+//REQUIRES_SHARED//和REQUIRES类似，只不过REQUIRES_SHARED可以共享地获取能力
+//ACQUIRE//用来修饰函数，使其调用线程必须具有对给定功能的独占访问权限。被修饰的函数在进入前必须持有能力。
+
+//ACQUIRE_SHARED//和ACQUIRE相同，只是能力可以共享
+//****//用来修饰函数，使其调用线程必须具有对给定功能的独占访问权限。被修饰的函数退出时不在持有能力。
+//RELEASE_SHARED//和RELEASE相同，用于修饰释放可以共享的能力
+//RELEASE_GENERIC//和RELEASE相同，用于修饰释放共享的能力和非共享的能力
+//TRY_ACQUIRE//尝试获取能力T
+//RY_ACQUIRE_SHARED//尝试获取共享的能力
+//EXCLUDES//修饰函数一定不能具有某项能力
+//ASSERT_CAPABILITY//修饰调用线程已经具有给定的能力。
+//RETURN_CAPABILITY//修饰函数负责返回给定的能力
+//NO_THREAD_SAFETY_ANALYSIS//修饰函数，关闭能力检查
+
 #if defined(__clang__) && (!defined(SWIG))
 #define THREAD_ANNOTATION_ATTRIBUTE__(x)   __attribute__((x))
 #else

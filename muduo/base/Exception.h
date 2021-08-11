@@ -9,6 +9,12 @@
 #include "muduo/base/Types.h"
 #include <exception>
 
+/*
+ * 关键字noexcept紧跟在函数的参数列表后面，用以标识该函数不会抛出异常。
+实际中会自定义异常体系，继承std::exception
+final修饰基类的虚函数不能被派生类重写。void*func()final
+override修饰派生类虚函数强制完成重写，如果没有重写会编译报错。voidfunc()override
+ */
 namespace muduo
 {
 

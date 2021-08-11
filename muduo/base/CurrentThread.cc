@@ -18,7 +18,12 @@ __thread char t_tidString[32];
 __thread int t_tidStringLength = 6;
 __thread const char* t_threadName = "unknown";
 static_assert(std::is_same<int, pid_t>::value, "pid_t should be int");
-
+/*
+ * __thread只能修饰POD类型POD类型（plainolddata），与C兼容的原始数据，
+例如，结构和整型等C语言中的类型是POD类型（初始化只能是编译期常量），
+但带有用户定义的构造函数或虚函数的类则不是非POD类型，也希望每个线程只有1份，该怎么办？
+可以用线程特定数据tsd
+ */
 string stackTrace(bool demangle)
 {
   string stack;
