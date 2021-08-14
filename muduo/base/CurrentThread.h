@@ -21,7 +21,14 @@ namespace CurrentThread
 
   inline int tid()
   {
-    if (__builtin_expect(t_cachedTid == 0, 0))
+      /*
+       * // 两个感叹号的作用是将所有的非零值转化为1
+       * #define LIKELY(x) __builtin_expect(!!(x), 1)  //x很可能为真
+       * #define UNLIKELY(x) __builtin_expect(!!(x), 0)//x很可能为假
+       *
+       * __builtin_expect是为了生成高效的代码
+       */
+    if (__builtin_expect(t_cachedTid == 0, 0))//表达式t_cachedTid == 0  很可能为假。//若没缓存tid，则获取tid
     {
       // 缓存线程id到t_cachedTid和t_tidString中
       cacheTid();

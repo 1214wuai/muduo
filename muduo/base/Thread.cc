@@ -17,7 +17,33 @@
 #include <sys/syscall.h>
 #include <sys/types.h>
 #include <linux/unistd.h>
-
+/*
+ * glibc是GNU发布的libc库，即c运行库。
+ * glibc是linux系统中最底层的api，几乎其它任何运行库都会依赖于glibc。
+ *
+ * 进程ID，在进程描述符中是pid_t tgid，
+ *      含义是Thread Group ID,该值对应的是用户层面的进程ID
+ *      可以通过getpid()获取
+ * 线程ID，在进程描述符中是pid_t pid
+ *      Linux提供了gettid系统调用来返回其线程ID，可是glibc并没有将该系统调用封装起来。需要调用如下接口来获取：
+ *      #include <sys/syscall.h>
+ *      pid_t tid;
+ *      tid = syscall(SYS_gettid);
+ *
+ * 线程组内的第一个线程，在用户态被称为主线程(main thread),在内核中被称为group leader，
+ * 内核在创建第一个线程时，会将线程组的ID的值设置成第一个线程的线程ID，
+ * group_leader指针则指向自身，既主线程的进程描述符。
+ *
+ * 在Linux中，目前的线程实现是Native POSIX Thread Libaray,简称NPTL。
+ * pthread_ create函数会产生一个线程ID，存放在第一个参数指向的地址中。该线程ID和前面说的线程ID不是一回事。
+ *
+ * 前面讲的线程ID属于进程调度的范畴。因为线程是轻量级进程，是操作系统调度器的最小单位，所以需要一个数值来唯一表示该线程。
+ *
+ * pthread_ create函数产生并标记在第一个参数指向的地址中的线程ID中，属于NPTL线程库的范
+ * 畴。线程库的后续操作，就是根据该线程ID来操作线程的。
+ *
+ * 线程库NPTL提供了pthread_ self函数，可以获得线程自身的ID
+ */
 namespace muduo
 {
 namespace detail
