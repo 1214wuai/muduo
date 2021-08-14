@@ -126,6 +126,48 @@ __END_DECLS
 
 #endif // CHECK_PTHREAD_RETURN_VALUE
 
+/*
+ * CountDownLatch.h
+ * 被mutable修饰的数据成员，可以在const成员函数中修改。
+ * Mutex.h用RAII手法封装mutex的创建、销毁、加锁、解锁这四个操作
+ * //================================================================
+ * 类MutexLock，被CAPABILITY("mutex")修饰，且不可拷贝
+ * private:
+ *      pthread_mutex_t mutex_;
+ *      pid_t holder_;用来存储线程被内核调用的线程ID
+ * public：
+ *      构造函数：把holder_置0，pthread_mutex_init(&mutex_,NULL)
+ *      析构函数：把holder_置0，pthread_mutex_destroy(&mutex_)
+ *      lock()-->pthread_mutex_lock(&mutex_)，上锁，同时和当前线程ID绑定
+ *               assignHolder();-->将线程ID赋值给成员变量holder_
+ *      unlock()-->pthread_mutex_unlock(&mutex_)
+ *                 unassignHolder();将holder_置0，该线程释放锁
+ *      assertLocked()-->isLockedByThisThread,判断holder_是不是等于当前线程的ID，是一个断言，
+ *      如果相等，程序继续运行，else：报错&&终止程序
+ *
+ *      //===========================================================
+ *      内部类UnassignGuard，不可拷贝
+ *      private：
+ *          MutexLock& owner_;
+ *      public：
+ *          构造函数-->将owner_的holder置0，也就是将锁和线程ID的绑定解除
+ *          析构函数-->将线程ID赋值给成员变量holder_
+ *
+ * //===============================================================
+ * 类MutexLockGuard，被SCOPED_CAPABILITY修饰，且不可拷贝
+ * private：
+ *      MutexLock& mutex_;
+ * public：
+ *      构造函数-->mutex_.lock();
+ *      析构函数-->mutex_.unassignHolderlock();
+ *
+ *
+ * SCOPED_CAPABILITY是实现RAII样式锁定的类的属性，其中在构造函数中获取能力，并在析构函数中释放。
+ * 此类类需要特殊处理，因为构造函数和析构函数通过不同的名称来引用功能
+ *
+ * //CountDownLatch.cchttps://blog.csdn.net/weixin_40471400/article/details/105589218
+ */
+
 namespace muduo
 {
 

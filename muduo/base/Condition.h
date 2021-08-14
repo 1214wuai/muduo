@@ -9,7 +9,7 @@
 #include "muduo/base/Mutex.h"
 
 #include <pthread.h>
-
+//RAII手法封装了条件变量
 namespace muduo
 {
 
