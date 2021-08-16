@@ -24,7 +24,7 @@ ThreadPool::ThreadPool(const string& nameArg)
 
 ThreadPool::~ThreadPool()
 {
-  if (running_)
+  if (running_)  //如果线程池在运行，那就要进行内存处理，在stop()函数中执行
   {
     stop();
   }
@@ -32,16 +32,16 @@ ThreadPool::~ThreadPool()
 
 void ThreadPool::start(int numThreads)
 {
-  assert(threads_.empty());
-  running_ = true;
-  threads_.reserve(numThreads);
+  assert(threads_.empty());  //确保未启动过
+  running_ = true;  ////启动标志
+  threads_.reserve(numThreads);  //预留reserver个空间
   for (int i = 0; i < numThreads; ++i)  // ���������߳�
   {
-    char id[32];
+    char id[32];  //id存储线程id
     snprintf(id, sizeof id, "%d", i+1);
-    threads_.emplace_back(new muduo::Thread(
-          std::bind(&ThreadPool::runInThread, this), name_+id));
-    threads_[i]->start();
+    threads_.emplace_back(new muduo::Thread(  //boost::bind在绑定类内部成员时，第二个参数必须是类的实例
+          std::bind(&ThreadPool::runInThread, this), name_+id));//runInThread是每个线程的线程运行函数，线程为执行任务情况下会阻塞
+    threads_[i]->start();//启动每个线程，但是由于线程运行函数是runInThread，所以会阻塞。
   }
   if (numThreads == 0 && threadInitCallback_)
   {
