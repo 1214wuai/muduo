@@ -24,7 +24,7 @@ ThreadPool::ThreadPool(const string& nameArg)
 
 ThreadPool::~ThreadPool()
 {
-  if (running_)  //å¦‚æœçº¿ç¨‹æ± åœ¨è¿è¡Œï¼Œé‚£å°±è¦è¿›è¡Œå†…å­˜å¤„ç†ï¼Œåœ¨stop()å‡½æ•°ä¸­æ‰§è¡Œ
+  if (running_)  //Èç¹ûÏß³Ì³ØÔÚÔËĞĞ£¬ÄÇ¾ÍÒª½øĞĞÄÚ´æ´¦Àí£¬ÔÚstop()º¯ÊıÖĞÖ´ĞĞ
   {
     stop();
   }
@@ -32,16 +32,16 @@ ThreadPool::~ThreadPool()
 
 void ThreadPool::start(int numThreads)
 {
-  assert(threads_.empty());  //ç¡®ä¿æœªå¯åŠ¨è¿‡
-  running_ = true;  ////å¯åŠ¨æ ‡å¿—
-  threads_.reserve(numThreads);  //é¢„ç•™reserverä¸ªç©ºé—´
+  assert(threads_.empty());  //È·±£Î´Æô¶¯¹ı
+  running_ = true;  //Æô¶¯±êÖ¾
+  threads_.reserve(numThreads);  //Ô¤Áôreserver¸ö¿Õ¼ä
   for (int i = 0; i < numThreads; ++i)  // ÅúÁ¿´´½¨Ïß³Ì
   {
-    char id[32];  //idå­˜å‚¨çº¿ç¨‹id
+    char id[32];  //id´æ´¢Ïß³Ìid
     snprintf(id, sizeof id, "%d", i+1);
-    threads_.emplace_back(new muduo::Thread(  //boost::bindåœ¨ç»‘å®šç±»å†…éƒ¨æˆå‘˜æ—¶ï¼Œç¬¬äºŒä¸ªå‚æ•°å¿…é¡»æ˜¯ç±»çš„å®ä¾‹
-          std::bind(&ThreadPool::runInThread, this), name_+id));//runInThreadæ˜¯æ¯ä¸ªçº¿ç¨‹çš„çº¿ç¨‹è¿è¡Œå‡½æ•°ï¼Œçº¿ç¨‹ä¸ºæ‰§è¡Œä»»åŠ¡æƒ…å†µä¸‹ä¼šé˜»å¡
-    threads_[i]->start();//å¯åŠ¨æ¯ä¸ªçº¿ç¨‹ï¼Œä½†æ˜¯ç”±äºçº¿ç¨‹è¿è¡Œå‡½æ•°æ˜¯runInThreadï¼Œæ‰€ä»¥ä¼šé˜»å¡ã€‚
+    threads_.emplace_back(new muduo::Thread(  //boost::bindÔÚ°ó¶¨ÀàÄÚ²¿³ÉÔ±Ê±£¬µÚ¶ş¸ö²ÎÊı±ØĞëÊÇÀàµÄÊµÀı
+          std::bind(&ThreadPool::runInThread, this), name_+id));//runInThreadÊÇÃ¿¸öÏß³ÌµÄÏß³ÌÔËĞĞº¯Êı£¬Ïß³ÌÎªÖ´ĞĞÈÎÎñÇé¿öÏÂ»á×èÈû
+    threads_[i]->start();//Æô¶¯Ã¿¸öÏß³Ì£¬µ«ÊÇÓÉÓÚÏß³ÌÔËĞĞº¯ÊıÊÇrunInThread£¬ËùÒÔ»á×èÈû¡£
   }
   if (numThreads == 0 && threadInitCallback_)
   {
