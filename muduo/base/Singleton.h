@@ -19,15 +19,17 @@ namespace detail
 {
 // This doesn't detect inherited member functions!
 // http://stackoverflow.com/questions/1966362/sfinae-to-check-for-inherited-member-functions
+//检测给定的类是否具有某个成员函数，此处用来检测给定的类中有没有no_destroy函数
 template<typename T>
 struct has_no_destroy
 {
-  template <typename C> static char test(decltype(&C::no_destroy));
+  template <typename C> static char test(decltype(&C::no_destroy));//decltype被称作类型说明符，它的作用是选择并返回操作数的数据类型。
   template <typename C> static int32_t test(...);
   const static bool value = sizeof(test<T>(0)) == 1;
 };
 }  // namespace detail
 
+//懒汉模式
 template<typename T>
 class Singleton : noncopyable
 {
@@ -37,6 +39,9 @@ class Singleton : noncopyable
 
   static T& instance()
   {
+    //int pthread_once(pthread_once_t *once_control, void (*init_routine) (void))；
+    //本函数使用初值为PTHREAD_ONCE_INIT的once_control变量保证init_routine()函数在本进程执行序列中仅执行一次。
+    //并且pthread_once()能保证线程安全，效率高于mutex
     pthread_once(&ponce_, &Singleton::init);
     assert(value_ != NULL);
     return *value_;
@@ -46,8 +51,10 @@ class Singleton : noncopyable
   static void init()
   {
     value_ = new T();
-    if (!detail::has_no_destroy<T>::value)
+    if (!detail::has_no_destroy<T>::value)//当参数是类且没有"no_destroy"方法才会注册atexit的destroy
     {
+      //登记atexit时调用的销毁函数，防止内存泄漏
+      //atexit函数的调用顺序是和登记顺序相反的。
       ::atexit(destroy);
     }
   }
