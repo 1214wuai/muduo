@@ -37,6 +37,8 @@ namespace muduo
  * 这个过程通过条件变量实现
  *
  */
+
+//muduo线程数目属于启动时配置，当线程池启动时，线程数目就已经固定下来。
 class ThreadPool : noncopyable
 {
  public:
@@ -46,8 +48,8 @@ class ThreadPool : noncopyable
   ~ThreadPool();
 
   // Must be called before start().
-  void setMaxQueueSize(int maxSize) { maxQueueSize_ = maxSize; }
-  void setThreadInitCallback(const Task& cb)
+  void setMaxQueueSize(int maxSize) { maxQueueSize_ = maxSize; }//设置线程池最大线程数目
+  void setThreadInitCallback(const Task& cb)//设置线程执行前的回调函数
   { threadInitCallback_ = cb; }
 
   void start(int numThreads);
@@ -67,19 +69,19 @@ class ThreadPool : noncopyable
   void run(Task f);
 
  private:
-  bool isFull() const REQUIRES(mutex_);
-  void runInThread();
-  Task take();
+  bool isFull() const REQUIRES(mutex_);//判满
+  void runInThread();//线程池的线程运行函数
+  Task take();//取任务函数
 
   mutable MutexLock mutex_;
-  Condition notEmpty_ GUARDED_BY(mutex_);
-  Condition notFull_ GUARDED_BY(mutex_);
+  Condition notEmpty_ GUARDED_BY(mutex_);//不空condition
+  Condition notFull_ GUARDED_BY(mutex_);//未满condition
   string name_;
-  Task threadInitCallback_;
-  std::vector<std::unique_ptr<muduo::Thread>> threads_;
-  std::deque<Task> queue_ GUARDED_BY(mutex_);
-  size_t maxQueueSize_;
-  bool running_;
+  Task threadInitCallback_;//线程执行前的回调函数
+  std::vector<std::unique_ptr<muduo::Thread>> threads_;//线程数组
+  std::deque<Task> queue_ GUARDED_BY(mutex_);//任务队列
+  size_t maxQueueSize_; //因为deque是通过push_back增加线程数目的，所以通过外界max_queuesize存储最多线程数目
+  bool running_; //线程池运行标志
 };
 
 }  // namespace muduo
