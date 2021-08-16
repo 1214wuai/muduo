@@ -48,7 +48,7 @@ class ThreadPool : noncopyable
   ~ThreadPool();
 
   // Must be called before start().
-  void setMaxQueueSize(int maxSize) { maxQueueSize_ = maxSize; }//设置线程池最大线程数目
+  void setMaxQueueSize(int maxSize) { maxQueueSize_ = maxSize; }//设置任务队列最大数目
   void setThreadInitCallback(const Task& cb)//设置线程执行前的回调函数
   { threadInitCallback_ = cb; }
 
