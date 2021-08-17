@@ -48,6 +48,7 @@ class AtomicIntegerT : noncopyable
 
   T getAndAdd(T x)
   {
+    //原子自增操作
     // in gcc >= 4.7: __atomic_fetch_add(&value_, x, __ATOMIC_SEQ_CST)
     //type __sync_fetch_and_add (type *ptr, type value, ...)
     // 将value加到*ptr上，结果更新到*ptr，并返回操作之前*ptr的值
@@ -87,6 +88,7 @@ class AtomicIntegerT : noncopyable
   T getAndSet(T newValue)
   {
     // in gcc >= 4.7: __atomic_exchange_n(&value_, newValue, __ATOMIC_SEQ_CST)
+    //// 将value写入*ptr，对*ptr加锁，并返回操作之前*ptr的值。即，try spinlock语义
     return __sync_lock_test_and_set(&value_, newValue);
   }
 

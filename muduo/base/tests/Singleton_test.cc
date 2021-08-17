@@ -60,6 +60,6 @@ int main()
          muduo::CurrentThread::tid(),
          &muduo::Singleton<Test>::instance(),
          muduo::Singleton<Test>::instance().name().c_str());
-  muduo::Singleton<TestNoDestroy>::instance();
+  muduo::Singleton<TestNoDestroy>::instance();//不会调用析构函数，因为有函数no_destroy。
   printf("with valgrind, you should see %zd-byte memory leak.\n", sizeof(TestNoDestroy));
 }
