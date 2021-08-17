@@ -74,7 +74,6 @@ class ThreadLocal : noncopyable
 
  private:
 
-  //类成员函数，隐藏了一个指针是this指针，这时候void *x，x的地址实际上就是this的地址，也就是该对象的地址。
   static void destructor(void *x)
   {
     T* obj = static_cast<T*>(x);
