@@ -16,7 +16,9 @@
 //对于POD类型，可以用__thread来解决。
 //POSIX线程库通过四个函数操作线程特定数据，分别是pthread_key_create，pthread_key_delete，pthread_getspecific，pthread_setspecific
 
-//create创建一个key，一旦一个线程创建了一个key，那么所有的线程也都有这个key。
+//create创建一个key，一旦一个线程创建了一个key，那么进程维护的key表的某元素（假设为key1）的标志位变成已使用。
+//因为key表是进程维护的，那么所有的线程也都知道key1是已使用的，在线程自己维护的pthread表中的对应的key1指针变量就可以指向线程自己的私有数据地址
+
 //我们可以为特定的线程指定特定的数据，可以使用set指定，get获取。
 //那么这些数据就是每个线程所私有的，这样不同的线程的key就指向了不同的数据。
 //delete是删除这个key，不是删除数据，删除数据要在create的时候指定一个回调函数，
@@ -33,7 +35,6 @@ POSIX要求实现POSIX的系统为每个进程维护一个称之为Key的结构�
 POSIX规定系统实现的Key结构数组必须包含不少于128个线程特定元素，
 而每个线程特定数据元素至少包含两项内容：使用标志和析构函数指针。
 key结构中的标志指示这个数组元素是否使用，所有的标志初始化为“不在使用”。
-
 */
 namespace muduo
 {

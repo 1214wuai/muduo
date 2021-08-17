@@ -63,7 +63,7 @@ class ThreadLocalSingleton : noncopyable
     {
       assert(pthread_getspecific(pkey_) == NULL);//保证之前key没有指向数据
       pthread_setspecific(pkey_, newObj);//设置key指向newobj指针，在ThreadLocalSingleton中会传入t_value_指针
-      //实际上是为了实现垃圾回收，线程结束时，deleter调用destructor，
+      //实际上是为了实现垃圾回收，线程结束时，自动调用destructor函数去释放new出来的空间
       //释放key指向的数据，而这个数据正好就是外部类的成员t_value_指针
     }
 

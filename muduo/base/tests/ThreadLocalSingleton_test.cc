@@ -55,4 +55,11 @@ int main()
   t2.join();
 
   pthread_exit(0);
+
+  //https://blog.csdn.net/hustraiet/article/details/9857919
+  /*
+   * Deleter类的构造函数只会执行一次：static成员变量，在进程启动的时候，初始化了deleter_，就调用了构造
+   *    Deleter构造：--》pthread_key_create(&pkey_, &ThreadLocalSingleton::destructor);
+   *    在进程维护的key表，
+   */
 }

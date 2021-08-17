@@ -73,7 +73,7 @@ class Thread : noncopyable
   string     name_;
   CountDownLatch latch_;
 
-  static AtomicInt32 numCreated_;
+  static AtomicInt32 numCreated_;//静态成员变量，记录当前进程除主线程之外，有多少个线程
 };
 
 }  // namespace muduo
