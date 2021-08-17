@@ -21,12 +21,12 @@ class ThreadLocalSingleton : noncopyable
   ThreadLocalSingleton() = delete;
   ~ThreadLocalSingleton() = delete;
 
-  static T& instance()
+  static T& instance() //返回单例对象，不需要按照线程安全方式实现，因为本身就是__thread类型
   {
-    if (!t_value_)
+    if (!t_value_)//如果指针为空则创建
     {
       t_value_ = new T();
-      deleter_.set(t_value_);
+      deleter_.set(t_value_);//把t_value_指针暴露给deleter，为了垃圾回收
     }
     return *t_value_;
   }
@@ -61,8 +61,10 @@ class ThreadLocalSingleton : noncopyable
 
     void set(T* newObj)
     {
-      assert(pthread_getspecific(pkey_) == NULL);
-      pthread_setspecific(pkey_, newObj);
+      assert(pthread_getspecific(pkey_) == NULL);//保证之前key没有指向数据
+      pthread_setspecific(pkey_, newObj);//设置key指向newobj指针，在ThreadLocalSingleton中会传入t_value_指针
+      //实际上是为了实现垃圾回收，线程结束时，deleter调用destructor，
+      //释放key指向的数据，而这个数据正好就是外部类的成员t_value_指针
     }
 
     pthread_key_t pkey_;

@@ -10,6 +10,8 @@ class Test : muduo::noncopyable
   Test()
   {
     printf("tid=%d, constructing %p\n", muduo::CurrentThread::tid(), this);
+    //this的值就是Threadlocal.h中的perThreadValue的值，
+    //就是一个地址，对象的地址，这个对象就是线程私有数据Test
   }
 
   ~Test()

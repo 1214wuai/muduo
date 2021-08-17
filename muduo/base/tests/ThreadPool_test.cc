@@ -88,6 +88,8 @@ void test2()
 
 int main()
 {
+  //等待队列的大小设置为0，run函数往任务队列放任务的时候
+  //永远不需要等待，push一个就拿走一个
   test(0);
   test(1);
   test(5);
