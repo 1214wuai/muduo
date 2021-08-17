@@ -3,6 +3,9 @@
 //
 // Author: Shuo Chen (chenshuo at chenshuo dot com)
 
+/*
+ * 有界缓冲区，在无界缓冲区的基础上，还需要判断队列满不满，因此多了一个条件变量
+ */
 #ifndef MUDUO_BASE_BOUNDEDBLOCKINGQUEUE_H
 #define MUDUO_BASE_BOUNDEDBLOCKINGQUEUE_H
 

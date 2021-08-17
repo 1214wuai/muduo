@@ -55,7 +55,13 @@ pid_t gettid()
   //有一个真实的线程id唯一标识，tid
   //通过linux下的系统调用syscall(SYS_gettid)来获得。
 }
-
+/*
+ * #include <pthread.h>
+ * int pthread_atfork(void (*prepare)(void), void (*parent)(void), void (*child)(void));
+ * pthread_atfork()在fork()之前调用，
+ * 当调用fork时，内部创建子进程前在父进程中会调用prepare，
+ * 内部创建子进程成功后，父进程会调用parent ，子进程会调用child。
+ */
 void afterFork()
 {
   muduo::CurrentThread::t_cachedTid = 0;
@@ -189,7 +195,7 @@ Thread::~Thread()
 
 void Thread::setDefaultName()
 {
-  int num = numCreated_.incrementAndGet();
+  int num = numCreated_.incrementAndGet();//记录已经创建的线程个数，，原子操作
   if (name_.empty())
   {
     char buf[32];
@@ -204,7 +210,7 @@ void Thread::start()
   started_ = true;
   // FIXME: move(func_)
   detail::ThreadData* data = new detail::ThreadData(func_, name_, &tid_, &latch_);
-  if (pthread_create(&pthreadId_, NULL, &detail::startThread, data))
+  if (pthread_create(&pthreadId_, NULL, &detail::startThread, data))//成功返回0
   {
     started_ = false;
     delete data; // or no delete?

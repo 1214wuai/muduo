@@ -2,7 +2,14 @@
 // that can be found in the License file.
 //
 // Author: Shuo Chen (chenshuo at chenshuo dot com)
-
+/*
+ * 在多线程编程中阻塞队列(Blocking Queue)是
+ * 一种常用于实现生产者和消费者模型的数据结构。其与普通的队列区别在于，当队列为空时，从队列获取元素的操
+ * 作将会被阻塞，直到队列中被放入了元素；当队列满时，往队列里存放元素的操作也会被阻塞，直到有元素被从队
+ * 列中取出(以上的操作都是基于不同的线程来说的，线程在对阻塞队列进程操作时会被阻塞)
+ *
+ * 无界缓冲，只需要判断空不空，不用判断满不满。只需要一个条件变量
+ */
 #ifndef MUDUO_BASE_BLOCKINGQUEUE_H
 #define MUDUO_BASE_BLOCKINGQUEUE_H
 
