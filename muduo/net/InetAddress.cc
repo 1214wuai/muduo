@@ -21,6 +21,11 @@ static const in_addr_t kInaddrAny = INADDR_ANY;
 static const in_addr_t kInaddrLoopback = INADDR_LOOPBACK;
 #pragma GCC diagnostic error "-Wold-style-cast"
 
+/*
+INADDR_ANY是ANY，是绑定地址0.0.0.0上的监听, 能收到任意一块网卡的连接；
+INADDR_LOOPBACK, 也就是绑定地址LOOPBAC, 往往是127.0.0.1, 只能收到127.0.0.1上面的连接请求
+*/
+
 //     /* Structure describing an Internet socket address.  */
 //     struct sockaddr_in {
 //         sa_family_t    sin_family; /* address family: AF_INET */
@@ -42,6 +47,11 @@ static const in_addr_t kInaddrLoopback = INADDR_LOOPBACK;
 //         uint32_t        sin6_scope_id; /* IPv6 scope-id */
 //     };
 
+//     struct in6_addr
+//     {
+//         u_int8_t __u6_addr8[16];
+//     }
+
 using namespace muduo;
 using namespace muduo::net;
 
@@ -61,6 +71,7 @@ InetAddress::InetAddress(uint16_t portArg, bool loopbackOnly, bool ipv6)
     memZero(&addr6_, sizeof addr6_);
     addr6_.sin6_family = AF_INET6;
     in6_addr ip = loopbackOnly ? in6addr_loopback : in6addr_any;
+    //in6addr_any即 "0:0:0:0:0:0:0:0"
     addr6_.sin6_addr = ip;
     addr6_.sin6_port = sockets::hostToNetwork16(portArg);
   }
@@ -88,6 +99,7 @@ InetAddress::InetAddress(StringArg ip, uint16_t portArg, bool ipv6)
   }
 }
 
+////将地址转化为ip和port的字符串放在buf中，buf存放的IP地址是点分十进制
 string InetAddress::toIpPort() const
 {
   char buf[64] = "";
@@ -95,6 +107,7 @@ string InetAddress::toIpPort() const
   return buf;
 }
 
+////将地址转化为ip的字符串放在buf中，buf存放的IP地址是点分十进制
 string InetAddress::toIp() const
 {
   char buf[64] = "";
@@ -102,13 +115,13 @@ string InetAddress::toIp() const
   return buf;
 }
 
-uint32_t InetAddress::ipv4NetEndian() const
+uint32_t InetAddress::ipv4NetEndian() const//返回网络字节序的IP
 {
   assert(family() == AF_INET);
   return addr_.sin_addr.s_addr;
 }
 
-uint16_t InetAddress::port() const
+uint16_t InetAddress::port() const//返回字节端口
 {
   return sockets::networkToHost16(portNetEndian());
 }
@@ -147,6 +160,7 @@ void InetAddress::setScopeId(uint32_t scope_id)
 {
   if (family() == AF_INET6)
   {
-    addr6_.sin6_scope_id = scope_id;
+    addr6_.sin6_scope_id = scope_id;//sockaddr_in6结构中的sin6_scope_id成员是站点标识符。
+    //sockaddr_in6结构中的sin6_scope_id成员可以保留未指定（零），这表示不明确的作用域地址。
   }
 }

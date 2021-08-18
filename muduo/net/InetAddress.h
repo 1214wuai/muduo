@@ -15,7 +15,7 @@
 #include "muduo/base/StringPiece.h"
 
 #include <netinet/in.h>
-
+//网际地址sockaddr_in封装
 namespace muduo
 {
 namespace net
@@ -71,7 +71,7 @@ class InetAddress : public muduo::copyable
   const struct sockaddr* getSockAddr() const { return sockets::sockaddr_cast(&addr6_); }
   void setSockAddrInet6(const struct sockaddr_in6& addr6) { addr6_ = addr6; }
 
-  uint32_t ipv4NetEndian() const;
+  uint32_t ipv4NetEndian() const;//返回ipv4的ip地址（网络字节序）
   uint16_t portNetEndian() const { return addr_.sin_port; }
 
   // resolve hostname to IP address, not changing port or sin_family

@@ -27,7 +27,8 @@ namespace
 
 typedef struct sockaddr SA;
 
-
+//fcntl函数，是把套接字设置为非阻塞式I/O型或者信号驱动式I/O型以及设置套接字属主的POSIX的方式
+//此处设为非阻塞和closeexec
 #if VALGRIND || defined (NO_ACCEPT4)
 void setNonBlockAndCloseOnExec(int sockfd)
 {
@@ -48,6 +49,14 @@ void setNonBlockAndCloseOnExec(int sockfd)
 #endif
 
 }  // namespace
+
+/*隐式转换函数，types.h中定义
+template<typename To, typename From>
+inline To implicit_cast(From const &f)
+{
+  return f;
+}
+*/
 
 const struct sockaddr* sockets::sockaddr_cast(const struct sockaddr_in6* addr)
 {
@@ -74,6 +83,16 @@ const struct sockaddr_in6* sockets::sockaddr_in6_cast(const struct sockaddr* add
   return static_cast<const struct sockaddr_in6*>(implicit_cast<const void*>(addr));
 }
 
+
+/*
+int socket(int domain, int type, int protocol);
+返回值：
+  成功：返回指向新创建的socket的文件描述符，失败：返回-1，设置errno
+
+当我们调用socket创建一个socket时，返回的socket描述字它存在于协议族（address family，AF_XXX）空间中，
+但没有一个具体的地址。如果想要给它赋值一个地址，就必须调用bind()函数，
+否则就当调用connect()、listen()时系统会自动随机分配一个端口。
+*/
 int sockets::createNonblockingOrDie(sa_family_t family)
 {
 #if VALGRIND
@@ -94,6 +113,10 @@ int sockets::createNonblockingOrDie(sa_family_t family)
   return sockfd;
 }
 
+/*
+int bind(int sockfd, const struct sockaddr *addr, socklen_t addrlen);
+把一个地址族中的特定地址赋给socket。
+*/
 void sockets::bindOrDie(int sockfd, const struct sockaddr* addr)
 {
   int ret = ::bind(sockfd, addr, static_cast<socklen_t>(sizeof(struct sockaddr_in6)));
@@ -103,8 +126,22 @@ void sockets::bindOrDie(int sockfd, const struct sockaddr* addr)
   }
 }
 
+
+/*
+int listen(int sockfd, int backlog);
+  backlog:排队建立3次握手队列和刚刚建立3次握手队列的链接数和
+          查看系统默认backlog:
+          cat /proc/sys/net/ipv4/tcp_max_syn_backlog
+
+  服务器同时服务于多个客户端，当有客户端发起连接时，
+  服务器调用的accept()返回并接受这个连接，如果有大量的客户端发起连接而服务器来不及处理，
+  尚未accept的客户端就处于连接等待状态，listen()声明sockfd处于监听状态，
+  并且最多允许有backlog个客户端处于连接待状态，
+  如果接收到更多的连接请求就忽略。listen()成功返回0，失败返回-1。
+*/
 void sockets::listenOrDie(int sockfd)
 {
+  //SOMAXCONN定义了系统中每一个端口最大的监听队列的长度,这是个全局的参数,默认值为1024
   int ret = ::listen(sockfd, SOMAXCONN);
   if (ret < 0)
   {
@@ -112,8 +149,18 @@ void sockets::listenOrDie(int sockfd)
   }
 }
 
+/*
+int accept(int sockfd, struct sockaddr *addr, socklen_t *addrlen);
+如果客户端有连接请求，必须使用accept函数来接受客户端的请求。
+  s中包含服务器的ip和port
+  addr是传出参数，返回链接客户端地址信息，含IP地址和端口号
+
+成功返回一个新的socket文件描述符(new_socket)，用于和客户端通信，失败返回-1，设置errno
+之后的send和recv都是指向这个new_socket
+*/
 int sockets::accept(int sockfd, struct sockaddr_in6* addr)
 {
+  //任何合理的库都必须保证 socklen_t 与 int 有相同的长度
   socklen_t addrlen = static_cast<socklen_t>(sizeof *addr);
 #if VALGRIND || defined (NO_ACCEPT4)
   int connfd = ::accept(sockfd, sockaddr_cast(addr), &addrlen);
@@ -121,6 +168,7 @@ int sockets::accept(int sockfd, struct sockaddr_in6* addr)
 #else
   int connfd = ::accept4(sockfd, sockaddr_cast(addr),
                          &addrlen, SOCK_NONBLOCK | SOCK_CLOEXEC);
+  //accept4()是非标准Linux扩展
 #endif
   if (connfd < 0)
   {
@@ -156,11 +204,25 @@ int sockets::accept(int sockfd, struct sockaddr_in6* addr)
   return connfd;
 }
 
+
+//客户端调用
+//addr：传入参数，指定服务器端地址信息，含IP地址和端口号
 int sockets::connect(int sockfd, const struct sockaddr* addr)
 {
   return ::connect(sockfd, addr, static_cast<socklen_t>(sizeof(struct sockaddr_in6)));
 }
 
+/*
+网络I/O操作有下面几组：
+read()/write()
+recv()/send()
+readv()/writev()
+recvmsg()/sendmsg()
+recvfrom()/sendto()
+
+readv和read的不同之处，接收的数据可以填充到多个缓冲区
+
+*/
 ssize_t sockets::read(int sockfd, void *buf, size_t count)
 {
   return ::read(sockfd, buf, count);
@@ -197,6 +259,8 @@ void sockets::shutdownWrite(int sockfd)
 /// SHUT_WR：断开输出流。套接字无法发送数据，但如果输出缓冲区中还有未传输的数据，则将传递到目标主机。
 /// SHUT_RDWR：同时断开 I/O 流。相当于分两次调用 shutdown()，其中一次以 SHUT_RD 为参数，另一次以 SHUT_WR 为参数
 
+
+//将地址转化为ip和port的字符串放在buf中，buf存放的IP地址是点分十进制
 void sockets::toIpPort(char* buf, size_t size,
                        const struct sockaddr* addr)
 {
@@ -219,6 +283,33 @@ void sockets::toIpPort(char* buf, size_t size,
   snprintf(buf+end, size-end, ":%u", port);
 }
 
+
+/*
+inet_aton() 转换网络主机地址ip(如192.168.1.10)为二进制数值,
+这个转换完后不能用于网络传输，还需要调用htons或htonl函数才能将主机字节顺序转化为网络字节顺序
+
+inet_addr函数转换网络主机地址（如192.168.1.10)为网络字节序二进制值,
+255.255.255.255是一个有效的地址，不过inet_addr无法处理;
+
+inet_ntoa 函数转换网络字节排序的地址为标准的ASCII以点分开的地址,
+该函数返回指向点分开的字符串地址（如192.168.1.10)的指针，
+该字符串的空间为静态分配的，这意味着在第二次调用该函数时，
+上一次调用将会被重写（复盖），所以如果需要保存该串最后复制出来自己管理！
+
+
+随IPv6出现的函数
+#include <arpe/inet.h>
+int inet_pton(int family, const char *strptr, void *addrptr);
+//将点分十进制的ip地址转化为用于网络传输的数值格式
+        返回值：若成功则为1，若输入不是有效的表达式则为0，若出错则为-1
+
+const char * inet_ntop(int family, const void *addrptr, char *strptr, size_t len);
+//将数值格式转化为点分十进制的ip地址格式
+        返回值：若成功则为指向结构的指针，若出错则为NULL
+
+p---presentation
+n---numeric
+*/
 void sockets::toIp(char* buf, size_t size,
                    const struct sockaddr* addr)
 {
@@ -236,6 +327,7 @@ void sockets::toIp(char* buf, size_t size,
   }
 }
 
+//从ip和port转化sockadd_in类型
 void sockets::fromIpPort(const char* ip, uint16_t port,
                          struct sockaddr_in* addr)
 {
@@ -258,11 +350,12 @@ void sockets::fromIpPort(const char* ip, uint16_t port,
   }
 }
 
+//返回socket错误
 int sockets::getSocketError(int sockfd)
 {
   int optval;
   socklen_t optlen = static_cast<socklen_t>(sizeof optval);
-
+  //获得socket的一些选项
   if (::getsockopt(sockfd, SOL_SOCKET, SO_ERROR, &optval, &optlen) < 0)
   {
     return errno;
@@ -273,6 +366,9 @@ int sockets::getSocketError(int sockfd)
   }
 }
 
+//获取与某个套接字关联的本地协议地址,getsockname
+//适用情况：未调用bind()就调用了connect()，一般调用connect()的都是客户端，本就不需要bind()
+//这时唯有getsockname()调用可以获知由内核赋予该连接的本地IP地址和本地端口号。
 struct sockaddr_in6 sockets::getLocalAddr(int sockfd)
 {
   struct sockaddr_in6 localaddr;
@@ -285,6 +381,9 @@ struct sockaddr_in6 sockets::getLocalAddr(int sockfd)
   return localaddr;
 }
 
+//获取与某个套接字关联的外地协议地址
+//在TCP的服务器端accept成功后，
+//通过getpeername()函数来获取当前连接的客户端的IP地址和端口号。
 struct sockaddr_in6 sockets::getPeerAddr(int sockfd)
 {
   struct sockaddr_in6 peeraddr;
@@ -297,6 +396,7 @@ struct sockaddr_in6 sockets::getPeerAddr(int sockfd)
   return peeraddr;
 }
 
+//利用getpeername和getsockname判断当前连接的客户端是不是自己，也就是自己连自己
 bool sockets::isSelfConnect(int sockfd)
 {
   struct sockaddr_in6 localaddr = getLocalAddr(sockfd);

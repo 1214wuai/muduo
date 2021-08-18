@@ -14,6 +14,8 @@
 #include <stdint.h>
 #include <endian.h>
 
+//封装了字节序转换函数
+//TCP/IP协议规定，网络数据流应采用大端字节序，即低地址存高字节，高地址存低字节。
 namespace muduo
 {
 namespace net
@@ -26,6 +28,20 @@ namespace sockets
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wconversion"
 #pragma GCC diagnostic ignored "-Wold-style-cast"
+/*
+        (无符号)64字节主机转网络：htobe64(uint64_t data)
+
+        (无符号)64字节网络转主机：be64toh(uint64_t data)
+
+        (无符号)32字节主机转网络：htobe32(uint32_t data)
+
+        (无符号)32字节网络转主机：be32toh(uint32_t data)
+
+        (无符号)16字节主机转网络：htobe16(uint16_t data)
+
+        (无符号)16字节网络转主机：be16toh(uint16_t data)
+
+*/
 inline uint64_t hostToNetwork64(uint64_t host64)
 {
   return htobe64(host64);
