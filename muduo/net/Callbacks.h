@@ -39,6 +39,15 @@ inline T* get_pointer(const std::unique_ptr<T>& ptr)
 
 // Adapted from google-protobuf stubs/common.h
 // see License in muduo/base/Types.h
+
+/*
+C++基类和派生类的智能指针转换：
+static_pointer_cast:当指针是智能指针时候，向下转换（基类转派生类）
+dynamic_pointer_cast:当指针是智能指针时候，向上转换（派生类转基类）
+const_pointer_cast
+reinterpret_pointer_cast
+
+*/
 template<typename To, typename From>
 inline ::std::shared_ptr<To> down_pointer_cast(const ::std::shared_ptr<From>& f) {
   if (false)
