@@ -93,6 +93,7 @@ void Socket::setTcpNoDelay(bool on)
   // FIXME CHECK
 }
 
+//地址复用，服务器挂掉之后需要立即重启，此时就需要地址复用
 void Socket::setReuseAddr(bool on)
 {
   int optval = on ? 1 : 0;

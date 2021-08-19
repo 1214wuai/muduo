@@ -33,9 +33,10 @@ class Poller;
 class TimerQueue;
 
 ///
-/// Reactor, at most one per thread.
+/// Reactor, at most one per thread.每个线程最多只能有一个EventLoop对象
 ///
 /// This is an interface class, so don't expose too much details.
+//创建了EventLoop对象的线程称为IO线程，其功能是运行事件循环（EventLoop::loop）
 class EventLoop : noncopyable
 {
  public:
@@ -137,31 +138,30 @@ class EventLoop : noncopyable
 
   typedef std::vector<Channel*> ChannelList;
 
-  // 当前事件循环是否正在运行
-  bool looping_; /* atomic */
-  std::atomic<bool> quit_;
-  bool eventHandling_; /* atomic */
-  bool callingPendingFunctors_; /* atomic */
-  int64_t iteration_;
-  const pid_t threadId_;
-  Timestamp pollReturnTime_;
-  std::unique_ptr<Poller> poller_;
-  std::unique_ptr<TimerQueue> timerQueue_;
-  int wakeupFd_;
+  bool looping_; /* atomic */                   // 当前事件循环是否正在运行
+  std::atomic<bool> quit_;                      //是否退出标志
+  bool eventHandling_; /* atomic */             //是否在处理事件标志
+  bool callingPendingFunctors_; /* atomic */    //是否调用pendingFunctors标志
+  int64_t iteration_;                           //迭代器
+  const pid_t threadId_;                        //当前所属对象线程id
+  Timestamp pollReturnTime_;                    //时间戳，poll返回的时间戳
+  std::unique_ptr<Poller> poller_;              //poller对象
+  std::unique_ptr<TimerQueue> timerQueue_;      //TimerQueue类型对象指针，构造函数中new
+  int wakeupFd_;                                //用于eventfd，线程间通信
   // unlike in TimerQueue, which is an internal class,
   // we don't expose Channel to client.
   // 专用于唤醒 poll/epoll
-  std::unique_ptr<Channel> wakeupChannel_;
+  std::unique_ptr<Channel> wakeupChannel_;      //wakeupfd所对应的通道，该通道会纳入到poller来管理
   boost::any context_;
 
   // scratch variables
-  ChannelList activeChannels_;
-  Channel* currentActiveChannel_;
+  ChannelList activeChannels_;                  //Poller返回的活动通道，vector<channel*>类型
+  Channel* currentActiveChannel_;               //当前正在处理的活动通道
 
   // 保证pendingFunctors_线程安全
   mutable MutexLock mutex_;
   // 未执行（等待执行）的函数列表
-  std::vector<Functor> pendingFunctors_ GUARDED_BY(mutex_);
+  std::vector<Functor> pendingFunctors_ GUARDED_BY(mutex_); //本线程或其它线程使用queueInLoop添加的任务，可能是I/O计算任务
 };
 
 }  // namespace net

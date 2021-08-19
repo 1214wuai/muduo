@@ -32,16 +32,61 @@ const int kPollTimeMs = 10000;
 
 int createEventfd()
 {
+  //支持read，write，poll,epoll,select ,close等操作
   // 创建一个事件fd，专门用来唤起 poll/epoll
   int evtfd = ::eventfd(0, EFD_NONBLOCK | EFD_CLOEXEC);
   if (evtfd < 0)
   {
     LOG_SYSERR << "Failed in eventfd";
-    abort();
+    abort();//不进行任何清理工作，直接终止程序
   }
   return evtfd;
 }
 
+//对一个已经收到FIN包的socket调用read方法,
+//如果接收缓冲已空, 则返回0, 这就是常说的表示连接关闭.
+//但第一次对其调用write方法时, 如果发送缓冲没问题, 会返回正确写入(发送).
+//但发送的报文会导致对端发送RST报文, 因为对端的socket已经调用了close, 完全关闭, 既不发送, 也不接收数据. 所以,
+//第二次调用write方法(假设在收到RST之后), 会生成SIGPIPE信号, 导致进程退出.
+
+//为了避免进程退出, 可以捕获SIGPIPE信号, 或者忽略它, 给它设置SIG_IGN信号处理函数:
+//这样, 第二次调用write方法时, 会返回-1, 同时errno置为SIGPIPE. 程序便能知道对端已经关闭.
+//close shutdown diff：https://www.cnblogs.com/JohnABC/p/7238241.html
+
+
+
+/*
+变量(代码)级:指定某个变量警告
+int a __attribute__ ((unused));
+指定该变量为”未使用的”.即使这个变量没有被使用,编译时也会忽略则个警告输出.
+
+
+文件级:在源代码文件中诊断(忽略/警告)
+语法:
+    #pragma GCC diagnostic [error|warning|ignored] "-W<警告选项>"
+诊断-忽略:(关闭警告)
+    #pragma  GCC diagnostic ignored  "-Wunused"
+    #pragma  GCC diagnostic ignored  "-Wunused-parameter"
+
+诊断-警告:(开启警告)
+    #pragma  GCC diagnostic warning  "-Wunused"
+    #pragma  GCC diagnostic warning  "-Wunused-parameter"
+诊断-错误:(开启警告-升级为错误)
+    #pragma  GCC diagnostic error  "-Wunused"
+    #pragma  GCC diagnostic error  "-Wunused-parameter"
+用法:
+    在文件开头处关闭警告,在文件结尾出再开启警告,这样可以忽略该文件中的指定警告.
+
+
+项目级:命令行/编译参数指定
+警告:
+gcc main.c -Wall 忽略:
+gcc mian.c -Wall -Wno-unused-parameter //开去all警告,但是忽略 -unused-parameter警告
+
+选项格式: -W[no-]<警告选项>
+如 : -Wno-unused-parameter # no- 表示诊断时忽略这个警告
+
+*/
 #pragma GCC diagnostic ignored "-Wold-style-cast"
 class IgnoreSigPipe
 {
@@ -50,6 +95,7 @@ class IgnoreSigPipe
   {
     ::signal(SIGPIPE, SIG_IGN);
     // LOG_TRACE << "Ignore SIGPIPE";
+    //忽略SIGPIPE信号
   }
 };
 #pragma GCC diagnostic error "-Wold-style-cast"
@@ -76,7 +122,7 @@ EventLoop::EventLoop()
     currentActiveChannel_(NULL)
 {
   LOG_DEBUG << "EventLoop created " << this << " in thread " << threadId_;
-  if (t_loopInThisThread)
+  if (t_loopInThisThread)//保证每个线程最多一个EventLoop对象
   {
     LOG_FATAL << "Another EventLoop " << t_loopInThisThread
               << " exists in this thread " << threadId_;

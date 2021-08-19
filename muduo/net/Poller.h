@@ -28,10 +28,14 @@ class Channel;
 /// Base class for IO Multiplexing
 ///
 /// This class doesn't own the Channel objects.
+
+//Poller使用一个map来存放描述符fd和对应的Channel类型的指针，
+//这样我们就可以通过fd很方便的得到Channel了。私有成员是一个EventLoop的指针，
+//用来指向当前EventLoop，用来判断防止Poller被跨线程调用。
 class Poller : noncopyable
 {
  public:
-  typedef std::vector<Channel*> ChannelList;
+  typedef std::vector<Channel*> ChannelList;                                //取别名ChannelList表示channel*类型数组
 
   Poller(EventLoop* loop);
   virtual ~Poller();

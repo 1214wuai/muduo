@@ -141,6 +141,7 @@ int listen(int sockfd, int backlog);
 */
 void sockets::listenOrDie(int sockfd)
 {
+  //第二个参数：全链接队列的个数，实际全连接个数=此参数+1
   //SOMAXCONN定义了系统中每一个端口最大的监听队列的长度,这是个全局的参数,默认值为1024
   int ret = ::listen(sockfd, SOMAXCONN);
   if (ret < 0)

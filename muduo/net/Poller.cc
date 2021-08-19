@@ -20,7 +20,7 @@ Poller::Poller(EventLoop* loop)
 
 Poller::~Poller() = default;
 
-bool Poller::hasChannel(Channel* channel) const
+bool Poller::hasChannel(Channel* channel) const                            //·µ»ØÊÇ·ñÓĞchannel
 {
   assertInLoopThread();
   ChannelMap::const_iterator it = channels_.find(channel->fd());

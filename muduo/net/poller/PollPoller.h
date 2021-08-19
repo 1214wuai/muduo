@@ -8,6 +8,29 @@
 //
 // This is an internal header file, you should not include this.
 
+/*
+五种IO模型：
+    阻塞IO，非阻塞IO，信号驱动IO，IO多路转接，异步IO
+
+    select
+    让程序监控很多描述符的状态变化
+    #include<sys/select.h>
+    int select(int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds, struct timeval *timeout);
+
+    poll
+    #include<poll.h>
+    int poll(struct pollfd *fds, nfds_t nfds, int timeout);
+          第二个参数表示fds数组的长度
+    //pollfd结构
+    struct pollfd{
+      int fd;
+      short events;
+      short revents;
+    };
+
+*/
+
+
 #ifndef MUDUO_NET_POLLER_POLLPOLLER_H
 #define MUDUO_NET_POLLER_POLLPOLLER_H
 
@@ -32,7 +55,7 @@ class PollPoller : public Poller
   PollPoller(EventLoop* loop);
   ~PollPoller() override;
 
-  Timestamp poll(int timeoutMs, ChannelList* activeChannels) override;
+  Timestamp poll(int timeoutMs, ChannelList* activeChannels) override;              //返回通道列表
   void updateChannel(Channel* channel) override;
   void removeChannel(Channel* channel) override;
 

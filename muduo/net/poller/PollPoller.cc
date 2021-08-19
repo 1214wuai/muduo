@@ -31,11 +31,11 @@ Timestamp PollPoller::poll(int timeoutMs, ChannelList* activeChannels)
   // XXX pollfds_ shouldn't change
   int numEvents = ::poll(&*pollfds_.begin(), pollfds_.size(), timeoutMs);
   int savedErrno = errno;
-  Timestamp now(Timestamp::now());
-  if (numEvents > 0)
+  Timestamp now(Timestamp::now());                                                  //时间戳
+  if (numEvents > 0)                                                                //说明有事件发生
   {
     LOG_TRACE << numEvents << " events happened";
-    fillActiveChannels(numEvents, activeChannels);
+    fillActiveChannels(numEvents, activeChannels);                                  //放入活跃事件通道中
   }
   else if (numEvents == 0)
   {
@@ -52,13 +52,14 @@ Timestamp PollPoller::poll(int timeoutMs, ChannelList* activeChannels)
   return now;
 }
 
+//向活跃事件通道数组放入活跃事件
 void PollPoller::fillActiveChannels(int numEvents,
                                     ChannelList* activeChannels) const
 {
   for (PollFdList::const_iterator pfd = pollfds_.begin();
       pfd != pollfds_.end() && numEvents > 0; ++pfd)
   {
-    if (pfd->revents > 0)
+    if (pfd->revents > 0)                                                           //>=说明产生了事件
     {
       --numEvents;
       ChannelMap::const_iterator ch = channels_.find(pfd->fd);
