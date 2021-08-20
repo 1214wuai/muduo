@@ -26,7 +26,7 @@ Channel::Channel(EventLoop* loop, int fd__)
     fd_(fd__),
     events_(0),
     revents_(0),
-    index_(-1),
+    index_(-1),                                                             //index_初始值设置为-1，表示本channel目前还没有和pollfd_绑定
     logHup_(true),
     tied_(false),
     eventHandling_(false),

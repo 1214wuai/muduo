@@ -38,6 +38,8 @@ class EventLoop;
 >一个通道对应唯一EventLoop，一个EventLoop可以有多个通道。
 >Channel类不负责fd的生存期，fd的生存期是有socket决定的，断开连接关闭描述符。
 >当有fd返回读写事件时，调用提前注册的回调函数处理读写事件
+
+一个fd关联一个channel
 */
 class Channel : noncopyable
 {
@@ -78,7 +80,7 @@ class Channel : noncopyable
 
   // for Poller
   int index() { return index_; }                                           //pollfd数组中的下标
-  void set_index(int idx) { index_ = idx; }
+  void set_index(int idx) { index_ = idx; }                                //将成员变量index_设置为PollPoller成员变量pollfds数组的某个下标，表示是这个事件的channel
 
   // for debug
   string reventsToString() const;
@@ -95,7 +97,7 @@ class Channel : noncopyable
   void update();
   void handleEventWithGuard(Timestamp receiveTime);
 
-  static const int kNoneEvent;
+  static const int kNoneEvent;                                             //0
   static const int kReadEvent;
   static const int kWriteEvent;
 

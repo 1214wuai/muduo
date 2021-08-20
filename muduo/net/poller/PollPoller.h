@@ -16,6 +16,7 @@
     让程序监控很多描述符的状态变化
     #include<sys/select.h>
     int select(int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds, struct timeval *timeout);
+    返回值：执行成功返回状态改变的事件个数，0表示超时，-1表示出错，并设置errno
 
     poll
     #include<poll.h>

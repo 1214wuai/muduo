@@ -29,6 +29,12 @@ typedef struct sockaddr SA;
 
 //fcntl函数，是把套接字设置为非阻塞式I/O型或者信号驱动式I/O型以及设置套接字属主的POSIX的方式
 //此处设为非阻塞和closeexec
+
+/*
+clsoe on exec
+关闭子进程无用文件描述符
+当fork子进程后，仍然可以使用fd。但执行exec后系统就会字段关闭子进程中的fd了
+*/
 #if VALGRIND || defined (NO_ACCEPT4)
 void setNonBlockAndCloseOnExec(int sockfd)
 {
