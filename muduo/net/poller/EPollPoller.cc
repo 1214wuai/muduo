@@ -104,7 +104,7 @@ void EPollPoller::fillActiveChannels(int numEvents,
     assert(it->second == channel);
 #endif
     channel->set_revents(events_[i].events);
-    activeChannels->push_back(channel);
+    activeChannels->push_back(channel);                                             //加入活跃事件数组，该数组在EventLoop的成员变量之中
   }
 }
 
@@ -184,7 +184,7 @@ void EPollPoller::update(int operation, Channel* channel)
   int fd = channel->fd();
   LOG_TRACE << "epoll_ctl op = " << operationToString(operation)
     << " fd = " << fd << " event = { " << channel->eventsToString() << " }";
-  if (::epoll_ctl(epollfd_, operation, fd, &event) < 0)
+  if (::epoll_ctl(epollfd_, operation, fd, &event) < 0)                            //系统调用epoll_ctl
   {
     if (operation == EPOLL_CTL_DEL)
     {

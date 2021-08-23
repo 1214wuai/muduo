@@ -62,11 +62,11 @@ void Channel::remove()                                                      //移
   addedToLoop_ = false;
   loop_->removeChannel(this);
 }
-
+                                                                            //处理所有发生的事件，如果活着，底层调用handleEventWithGuard
 void Channel::handleEvent(Timestamp receiveTime)                            //事件到来调用handleEvent处理
 {
-  std::shared_ptr<void> guard;
-  if (tied_)
+  std::shared_ptr<void> guard;                                              //保证线程安全，保证不会调用一个销毁了的对象
+  if (tied_)                                                                //这个标志位与TcpConnection有关
   {
     guard = tie_.lock();
     if (guard)
@@ -90,10 +90,10 @@ void Channel::handleEventWithGuard(Timestamp receiveTime)
     {
       LOG_WARN << "fd = " << fd_ << " Channel::handle_event() POLLHUP";
     }
-    if (closeCallback_) closeCallback_();
+    if (closeCallback_) closeCallback_();                                  //调用关闭回调函数
   }
 
-  if (revents_ & POLLNVAL)                                                  //不合法文件描述符
+  if (revents_ & POLLNVAL)                                                 //不合法文件描述符
   {
     LOG_WARN << "fd = " << fd_ << " Channel::handle_event() POLLNVAL";
   }

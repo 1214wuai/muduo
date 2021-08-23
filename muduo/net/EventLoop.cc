@@ -28,10 +28,11 @@ namespace
 {
 __thread EventLoop* t_loopInThisThread = 0;
 
-const int kPollTimeMs = 10000;
+const int kPollTimeMs = 10000;                                                          //poll/epoll等待超时时间
 
 int createEventfd()
 {
+  //eventfd是一个比较高效的线程间通信机制，缓冲区管理全部用buffer，比pipe少用一个pipe descriptor
   //支持read，write，poll,epoll,select ,close等操作
   // 创建一个事件fd，专门用来唤起 poll/epoll
   int evtfd = ::eventfd(0, EFD_NONBLOCK | EFD_CLOEXEC);
@@ -94,8 +95,8 @@ class IgnoreSigPipe
   IgnoreSigPipe()
   {
     ::signal(SIGPIPE, SIG_IGN);
-    // LOG_TRACE << "Ignore SIGPIPE";
-    //忽略SIGPIPE信号
+                                                                                    //LOG_TRACE << "Ignore SIGPIPE";
+                                                                                    //忽略SIGPIPE信号
   }
 };
 #pragma GCC diagnostic error "-Wold-style-cast"
@@ -109,20 +110,23 @@ EventLoop* EventLoop::getEventLoopOfCurrentThread()
 }
 
 EventLoop::EventLoop()
-  : looping_(false),
+  : looping_(false),                                                                //表示还未循环
     quit_(false),
     eventHandling_(false),
     callingPendingFunctors_(false),
     iteration_(0),
     threadId_(CurrentThread::tid()),
-    poller_(Poller::newDefaultPoller(this)),
-    timerQueue_(new TimerQueue(this)),
-    wakeupFd_(createEventfd()),
-    wakeupChannel_(new Channel(this, wakeupFd_)),
+    poller_(Poller::newDefaultPoller(this)),                                        //设置了环境变量MUDUO_USE_POLL，就构造一个实际的PollPoller对象。否则构造一个EPollPoller对象。
+                                                                                    //基类指针，指向派生类,基类的指针、引用可以指向子类对象
+                                                                                    //poller_成员在eventlooper中只会调用基类有的四个函数：poll、updateChannel、removeChannel、hasChannel。派生类重写了前三个函数
+
+    timerQueue_(new TimerQueue(this)),                                              //构造一个timerQueue指针，使用scope_ptr管理
+    wakeupFd_(createEventfd()),                                                     //创建eventfd作为线程间等待/通知机制
+    wakeupChannel_(new Channel(this, wakeupFd_)),                                   //创建wakeupChannel通道
     currentActiveChannel_(NULL)
 {
   LOG_DEBUG << "EventLoop created " << this << " in thread " << threadId_;
-  if (t_loopInThisThread)//保证每个线程最多一个EventLoop对象
+  if (t_loopInThisThread)                                                           //保证每个线程最多一个EventLoop对象，如果已创建，终止程序(LOG_FATAL)
   {
     LOG_FATAL << "Another EventLoop " << t_loopInThisThread
               << " exists in this thread " << threadId_;
@@ -131,14 +135,13 @@ EventLoop::EventLoop()
   {
     t_loopInThisThread = this;
   }
-
-  // 设置读事件回调函数
+  // 合成一个eventfd的通道Channel
+  // 设置读事件回调函数，设定wakeupChannel的回调函数，即EventLoop自己的的handleRead函数
   wakeupChannel_->setReadCallback(
       std::bind(&EventLoop::handleRead, this));
   // we are always reading the wakeupfd
 
-  // 使能监听读事件
-  wakeupChannel_->enableReading();
+  wakeupChannel_->enableReading();                                                 // 使能wakeupFD_监听读事件，此处调用Channel的enableReading函数
 }
 
 EventLoop::~EventLoop()
@@ -156,9 +159,8 @@ EventLoop::~EventLoop()
  */
 void EventLoop::loop()
 {
-  // 判断是否重复开始事件循环
-  assert(!looping_);
-  assertInLoopThread();
+  assert(!looping_);                                                              // 判断是否重复开始事件循环
+  assertInLoopThread();                                                           //断言处于创建该对象的线程中
   looping_ = true;
   quit_ = false;  // FIXME: what if someone calls quit() before loop() ?
   LOG_TRACE << "EventLoop " << this << " start looping";
@@ -168,7 +170,7 @@ void EventLoop::loop()
     activeChannels_.clear();
 
     // 1.等待事件
-    pollReturnTime_ = poller_->poll(kPollTimeMs, &activeChannels_);
+    pollReturnTime_ = poller_->poll(kPollTimeMs, &activeChannels_);              //调用poll返回活动的通道，有可能是唤醒返回的
 
     // 记录循环次数
     ++iteration_;
@@ -181,17 +183,18 @@ void EventLoop::loop()
 
     // 2.处理事件
     eventHandling_ = true;
-    for (Channel* channel : activeChannels_)
+    for (Channel* channel : activeChannels_)                                    //遍历通道来进行处理
     {
-      currentActiveChannel_ = channel;
-      // 执行事件对应的处理函数
-      currentActiveChannel_->handleEvent(pollReturnTime_);
+      currentActiveChannel_ = channel;                                          //当前正在处理的活动通道
+      currentActiveChannel_->handleEvent(pollReturnTime_);                      // 执行事件对应的处理函数，在Channel.cc中
     }
     currentActiveChannel_ = NULL;
     eventHandling_ = false;
 
     // 3.处理未执行的函数 todo 暂时不知道哪种业务场景使用这个比较合适
-    doPendingFunctors();
+    //I/O线程设计比较灵活，通过下面这个设计也能够进行计算任务，否则当I/O不是很繁忙的时候，这个I/O线程就一直处于阻塞状态。
+    //我们需要让它也能执行一些计算任务
+    doPendingFunctors();//处理用户回调任务
   }
 
   LOG_TRACE << "EventLoop " << this << " stop looping";
@@ -210,15 +213,15 @@ void EventLoop::quit()
   }
 }
 
-void EventLoop::runInLoop(Functor cb)
+void EventLoop::runInLoop(Functor cb)                                           //在I/O线程中调用某个函数，该函数可以跨线程调用
 {
-  if (isInLoopThread())   // 当前执行的线程 是 eventloop的控制线程才可直接执行cb()
+  if (isInLoopThread())                                                         // 当前执行的线程 是 eventloop的控制线程才可直接执行cb()
   {
     cb();
   }
   else
   {
-    // 1.如果当前线程不是eventloop的控制线程，则将cb加入到eventloop的函数队列中
+    // 1.如果当前线程不是eventloop的控制线程，则异步将cb加入到eventloop的函数队列中，
     // 2.并唤醒 eventloop的控制线程
     queueInLoop(std::move(cb));
   }
@@ -234,6 +237,9 @@ void EventLoop::queueInLoop(Functor cb)
   pendingFunctors_.push_back(std::move(cb));
   }
 
+  //如果当前调用queueInLoop的不是I/O线程，那么唤醒该I/O线程，以便I/O线程及时处理。
+  //或者调用的线程是当前I/O线程，并且此时调用pendingfunctor，需要唤醒，当loop再次去poll监控的时候就会发现自己被唤醒
+  //只有当前I/O线程的事件回调中调用queueInLoop才不需要唤醒
   if (!isInLoopThread() || callingPendingFunctors_)  // todo eventloop是否在处理函数是不是应该都需要唤醒？
   {
     wakeup();
@@ -304,14 +310,15 @@ void EventLoop::abortNotInLoopThread()
 void EventLoop::wakeup()
 {
   uint64_t one = 1;
-  ssize_t n = sockets::write(wakeupFd_, &one, sizeof one);
+  ssize_t n = sockets::write(wakeupFd_, &one, sizeof one);                              //随便写点数据进去就唤醒了I/O线程，I/O线程被唤醒后，就走正常的处理流程，调用EventLoop::handlRead
   if (n != sizeof one)
   {
     LOG_ERROR << "EventLoop::wakeup() writes " << n << " bytes instead of 8";
   }
 }
-
-void EventLoop::handleRead()
+//这里是为了当我们向EventLoop的queue中也就是
+//pendingFunctors_这个容器数组加入任务时，通过eventfd通知I/O线程从poll状态退出来执行I/O计算任务。
+void EventLoop::handleRead()                                                           //被wakeupFD_唤起的读事件，将数据读出来之后不做处理
 {
   uint64_t one = 1;
   ssize_t n = sockets::read(wakeupFd_, &one, sizeof one);
@@ -325,12 +332,13 @@ void EventLoop::doPendingFunctors()
 {
   std::vector<Functor> functors;
   callingPendingFunctors_ = true;
-
+                                                                                     //临界区，这里使用了一个栈上变量functors和pendingFunctors交换
   {
   MutexLockGuard lock(mutex_);
   functors.swap(pendingFunctors_);
   }
 
+                                                                                     //此处其它线程就可以往pendingFunctors添加任务,此时不需要临界保护
   for (const Functor& functor : functors)
   {
     functor();

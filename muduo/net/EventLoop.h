@@ -37,6 +37,7 @@ class TimerQueue;
 ///
 /// This is an interface class, so don't expose too much details.
 //创建了EventLoop对象的线程称为IO线程，其功能是运行事件循环（EventLoop::loop）
+//没有创建EventLoop对象的线程就不是IO线程
 class EventLoop : noncopyable
 {
  public:
@@ -151,7 +152,7 @@ class EventLoop : noncopyable
   // unlike in TimerQueue, which is an internal class,
   // we don't expose Channel to client.
   // 专用于唤醒 poll/epoll
-  std::unique_ptr<Channel> wakeupChannel_;      //wakeupfd所对应的通道，该通道会纳入到poller来管理
+  std::unique_ptr<Channel> wakeupChannel_;      //wakeupfd所对应的通道，该通道会纳入到poller_来管理
   boost::any context_;
 
   // scratch variables
