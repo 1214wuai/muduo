@@ -152,7 +152,7 @@ class EventLoop : noncopyable
   // unlike in TimerQueue, which is an internal class,
   // we don't expose Channel to client.
   // 专用于唤醒 poll/epoll
-  std::unique_ptr<Channel> wakeupChannel_;      //wakeupfd所对应的通道，该通道会纳入到poller_来管理
+  std::unique_ptr<Channel> wakeupChannel_;      //wakeupfd所对应的通道， 该通道会纳入到poller_来管理
   boost::any context_;
 
   // scratch variables
