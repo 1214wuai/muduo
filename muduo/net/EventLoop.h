@@ -37,6 +37,7 @@ class TimerQueue;
 ///
 /// This is an interface class, so don't expose too much details.
 //创建了EventLoop对象的线程称为IO线程，其功能是运行事件循环（EventLoop::loop）
+//没有创建EventLoop对象的线程就不是IO线程
 class EventLoop : noncopyable
 {
  public:
