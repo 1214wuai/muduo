@@ -34,6 +34,11 @@ typedef struct sockaddr SA;
 clsoe on exec
 关闭子进程无用文件描述符
 当fork子进程后，仍然可以使用fd。但执行exec后系统就会字段关闭子进程中的fd了
+
+三种方式：
+open                  O_CLOEXEC
+fcntl                 FD_CLOEXEC
+epoll_create1         EPOLL_CLOEXEC
 */
 #if VALGRIND || defined (NO_ACCEPT4)
 void setNonBlockAndCloseOnExec(int sockfd)

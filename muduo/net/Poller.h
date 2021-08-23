@@ -43,6 +43,11 @@ class Poller : noncopyable
   /// Polls the I/O events.
   /// Must be called in the loop thread.
   virtual Timestamp poll(int timeoutMs, ChannelList* activeChannels) = 0;
+  /*
+  = 0 纯虚函数限定符
+  定义一个函数为纯虚函数，才代表函数没有被实现。
+  定义纯虚函数是为了实现一个接口，起到一个规范的作用，规范继承这个类的程序员必须实现这个函数。
+  */
 
   /// Changes the interested I/O events.
   /// Must be called in the loop thread.

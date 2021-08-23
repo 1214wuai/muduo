@@ -56,7 +56,7 @@ void PollPoller::fillActiveChannels(int numEvents,
                                     ChannelList* activeChannels) const             //向活跃事件通道数组放入活跃事件
 {
   for (PollFdList::const_iterator pfd = pollfds_.begin();
-      pfd != pollfds_.end() && numEvents > 0; ++pfd)                               //遍历寻找产生事件的fd
+      pfd != pollfds_.end() && numEvents > 0; ++pfd)                               //遍历寻找产生事件的fd，找到比值为revents被修改的描述符
   {
     if (pfd->revents > 0)                                                          //>=0 说明产生了事件
     {
@@ -65,7 +65,7 @@ void PollPoller::fillActiveChannels(int numEvents,
       assert(ch != channels_.end());
       Channel* channel = ch->second;
       assert(channel->fd() == pfd->fd);
-      channel->set_revents(pfd->revents);                                         //把监听到发生的事件放到Channel中
+      channel->set_revents(pfd->revents);                                         //把监听到发生的事件放到Channel中，channel设置时间状态
       // pfd->revents = 0;
       activeChannels->push_back(channel);                                         //加入活跃事件数组，该数组在EventLoop的成员变量之中
     }

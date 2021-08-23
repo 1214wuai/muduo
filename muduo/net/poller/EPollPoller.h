@@ -47,7 +47,7 @@ class EPollPoller : public Poller
   typedef std::vector<struct epoll_event> EventList;
 
   int epollfd_;
-  EventList events_;
+  EventList events_;                                                                          //专门用来存放返回的就绪事件，如果没有就绪的事件，该vector就为空
 };
 
 }  // namespace net

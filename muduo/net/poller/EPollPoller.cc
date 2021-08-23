@@ -38,8 +38,10 @@ const int kDeleted = 2;
 
 EPollPoller::EPollPoller(EventLoop* loop)
   : Poller(loop),
-    epollfd_(::epoll_create1(EPOLL_CLOEXEC)),
-    events_(kInitEventListSize)
+    epollfd_(::epoll_create1(EPOLL_CLOEXEC)),                                           //系统调用epoll_create1，
+                                                                                        //如果参数为0，和删除了size参数的epoll_create没有区别
+                                                                                        //使用参数EPOLL_CLOEXEC，关闭子进程无用文件描述符
+    events_(kInitEventListSize)                                                         //epoll_event数目为16
 {
   if (epollfd_ < 0)
   {
@@ -49,7 +51,7 @@ EPollPoller::EPollPoller(EventLoop* loop)
 
 EPollPoller::~EPollPoller()
 {
-  ::close(epollfd_);
+  ::close(epollfd_);                                                                    //epoll_craete1函数执行成功之后返回的非负文件描述符，使用结束之后必须调用close关闭
 }
 
 Timestamp EPollPoller::poll(int timeoutMs, ChannelList* activeChannels)
@@ -65,7 +67,7 @@ Timestamp EPollPoller::poll(int timeoutMs, ChannelList* activeChannels)
   {
     LOG_TRACE << numEvents << " events happened";
     fillActiveChannels(numEvents, activeChannels);
-    if (implicit_cast<size_t>(numEvents) == events_.size())
+    if (implicit_cast<size_t>(numEvents) == events_.size())                           //如果返回的事件数目等于当前事件数组大小，就分配2倍空间
     {
       events_.resize(events_.size()*2);
     }
@@ -86,13 +88,15 @@ Timestamp EPollPoller::poll(int timeoutMs, ChannelList* activeChannels)
   return now;
 }
 
+
+//把返回到的这么多个事件添加到activeChannels
 void EPollPoller::fillActiveChannels(int numEvents,
                                      ChannelList* activeChannels) const
 {
   assert(implicit_cast<size_t>(numEvents) <= events_.size());
   for (int i = 0; i < numEvents; ++i)
   {
-    Channel* channel = static_cast<Channel*>(events_[i].data.ptr);
+    Channel* channel = static_cast<Channel*>(events_[i].data.ptr);                   //events_中存放的是返回的就绪事件
 #ifndef NDEBUG
     int fd = channel->fd();
     ChannelMap::const_iterator it = channels_.find(fd);
@@ -104,31 +108,33 @@ void EPollPoller::fillActiveChannels(int numEvents,
   }
 }
 
+//这个函数被调用是因为channel->enablereading()被调用，再调用channel->update()，
+//再event_loop->updateChannel()，再->epoll或poll的updateChannel被调用
 void EPollPoller::updateChannel(Channel* channel)
 {
   Poller::assertInLoopThread();
-  const int index = channel->index();
+  const int index = channel->index();                                                 //初始状态index是-1
   LOG_TRACE << "fd = " << channel->fd()
     << " events = " << channel->events() << " index = " << index;
   if (index == kNew || index == kDeleted)
   {
     // a new one, add with EPOLL_CTL_ADD
     int fd = channel->fd();
-    if (index == kNew)
+    if (index == kNew)                                                                //全新的事件，map中还没有
     {
       assert(channels_.find(fd) == channels_.end());
-      channels_[fd] = channel;
+      channels_[fd] = channel;                                                        //在map中插入事件
     }
-    else // index == kDeleted
+    else // index == kDeleted                                                           需要删除的事件
     {
       assert(channels_.find(fd) != channels_.end());
       assert(channels_[fd] == channel);
     }
 
-    channel->set_index(kAdded);
-    update(EPOLL_CTL_ADD, channel);
+    channel->set_index(kAdded);                                                       //不管是新增的，还是曾经已经删除的，都把标志位改为kAdded
+    update(EPOLL_CTL_ADD, channel);                                                   //添加该事件
   }
-  else
+  else // index == kAdded                                                             //更新一个已经添加过的事件
   {
     // update existing one with EPOLL_CTL_MOD/DEL
     int fd = channel->fd();
@@ -136,12 +142,12 @@ void EPollPoller::updateChannel(Channel* channel)
     assert(channels_.find(fd) != channels_.end());
     assert(channels_[fd] == channel);
     assert(index == kAdded);
-    if (channel->isNoneEvent())
+    if (channel->isNoneEvent())                                                       //如果要被更新为 不监听任何事件，则把index设置为kDeleted
     {
-      update(EPOLL_CTL_DEL, channel);
-      channel->set_index(kDeleted);
+      update(EPOLL_CTL_DEL, channel);                                                 //在epoll中删除该事件，但是channels_中的数据还没有清理
+      channel->set_index(kDeleted);                                                   //更新channel的index状态为kDeleted
     }
-    else
+    else                                                                              //更新监听的事件
     {
       update(EPOLL_CTL_MOD, channel);
     }
@@ -158,11 +164,11 @@ void EPollPoller::removeChannel(Channel* channel)
   assert(channel->isNoneEvent());
   int index = channel->index();
   assert(index == kAdded || index == kDeleted);
-  size_t n = channels_.erase(fd);
+  size_t n = channels_.erase(fd);                                                    //清理channels_中的数据
   (void)n;
   assert(n == 1);
 
-  if (index == kAdded)
+  if (index == kAdded)                                                              //如果是kDeleted状态的，在之前在updatechannel中就已经被移除了，值需要清理channels_
   {
     update(EPOLL_CTL_DEL, channel);
   }
