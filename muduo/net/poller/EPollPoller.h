@@ -36,7 +36,7 @@ class EPollPoller : public Poller
   void removeChannel(Channel* channel) override;
 
  private:
-  static const int kInitEventListSize = 16;
+  static const int kInitEventListSize = 16;                                            //默认事件数组大小，是用来装epoll_wait()返回的可读或可写事件的
 
   static const char* operationToString(int op);
 

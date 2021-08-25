@@ -13,7 +13,7 @@ EventLoop* g_loop;
 void callback()
 {
   printf("callback(): pid = %d, tid = %d\n", getpid(), CurrentThread::tid());
-  EventLoop anotherLoop;
+  EventLoop anotherLoop;//此线程在threadFunc中已经启动了一个loop，此处再启动一个loop会报错。
 }
 
 void threadFunc()
@@ -31,9 +31,9 @@ int main()
 {
   printf("main(): pid = %d, tid = %d\n", getpid(), CurrentThread::tid());
 
-  assert(EventLoop::getEventLoopOfCurrentThread() == NULL);
+  assert(EventLoop::getEventLoopOfCurrentThread() == NULL);//一个线程最多只有一个loop，此时该线程还没有创建loop对象
   EventLoop loop;
-  assert(EventLoop::getEventLoopOfCurrentThread() == &loop);
+  assert(EventLoop::getEventLoopOfCurrentThread() == &loop);//该线程已经创建好了loop对象
 
   Thread thread(threadFunc);
   thread.start();

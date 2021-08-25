@@ -116,12 +116,12 @@ EventLoop::EventLoop()
     callingPendingFunctors_(false),
     iteration_(0),
     threadId_(CurrentThread::tid()),
-    poller_(Poller::newDefaultPoller(this)),                                        //设置了环境变量MUDUO_USE_POLL，就构造一个实际的PollPoller对象。否则构造一个EPollPoller对象。
+    poller_(Poller::newDefaultPoller(this)),                                        //设置了环境变量MUDUO_USE_POLL，就构造一个实际的PollPoller对象。否则构造一个EPollPoller对象。创建一个epollfd_=3
                                                                                     //基类指针，指向派生类,基类的指针、引用可以指向子类对象
                                                                                     //poller_成员在eventlooper中只会调用基类有的四个函数：poll、updateChannel、removeChannel、hasChannel。派生类重写了前三个函数
 
-    timerQueue_(new TimerQueue(this)),                                              //构造一个timerQueue指针，使用scope_ptr管理
-    wakeupFd_(createEventfd()),                                                     //创建eventfd作为线程间等待/通知机制
+    timerQueue_(new TimerQueue(this)),                                              //构造一个timerQueue指针，使用scope_ptr管理，创建一个timerfd_ = 4
+    wakeupFd_(createEventfd()),                                                     //创建eventfd作为线程间等待/通知机制，创建一个wakeupFD_ = 5
     wakeupChannel_(new Channel(this, wakeupFd_)),                                   //创建wakeupChannel通道
     currentActiveChannel_(NULL)
 {
@@ -251,25 +251,25 @@ size_t EventLoop::queueSize() const
   MutexLockGuard lock(mutex_);
   return pendingFunctors_.size();
 }
-
-TimerId EventLoop::runAt(Timestamp time, TimerCallback cb)
+                                                                               //下面四个函数都是和定时器有关的函数TimerQueue.h,TimerQueue是EventLoop类的成员
+TimerId EventLoop::runAt(Timestamp time, TimerCallback cb)                     //在时间戳为time的时间执行，0.0表示一次性不重复
 {
   return timerQueue_->addTimer(std::move(cb), time, 0.0);
 }
 
-TimerId EventLoop::runAfter(double delay, TimerCallback cb)
+TimerId EventLoop::runAfter(double delay, TimerCallback cb)                   //延迟delay 秒时间执行的定时器
 {
-  Timestamp time(addTime(Timestamp::now(), delay));
+  Timestamp time(addTime(Timestamp::now(), delay));                           //合成一个时间戳
   return runAt(time, std::move(cb));
 }
 
-TimerId EventLoop::runEvery(double interval, TimerCallback cb)
+TimerId EventLoop::runEvery(double interval, TimerCallback cb)                //间隔性的定时器，起始就是重复定时器，间隔interval需要大于0
 {
   Timestamp time(addTime(Timestamp::now(), interval));
   return timerQueue_->addTimer(std::move(cb), time, interval);
 }
 
-void EventLoop::cancel(TimerId timerId)
+void EventLoop::cancel(TimerId timerId)                                      //直接调用timerQueue的cancle
 {
   return timerQueue_->cancel(timerId);
 }

@@ -13,14 +13,14 @@ using namespace muduo::net;
 
 AtomicInt64 Timer::s_numCreated_;
 
-void Timer::restart(Timestamp now)
+void Timer::restart(Timestamp now)                                          //重启
 {
-  if (repeat_)
+  if (repeat_)                                                              //如果是重复的，那么就从当前时间计算下一次的超时时刻
   {
     expiration_ = addTime(now, interval_);
   }
   else
   {
-    expiration_ = Timestamp::invalid();
+    expiration_ = Timestamp::invalid();                                     //获取一个无效事件戳，即值为0
   }
 }

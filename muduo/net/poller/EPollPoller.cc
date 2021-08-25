@@ -43,7 +43,7 @@ EPollPoller::EPollPoller(EventLoop* loop)
                                                                                         //使用参数EPOLL_CLOEXEC，关闭子进程无用文件描述符
     events_(kInitEventListSize)                                                         //epoll_event数目为16
 {
-  if (epollfd_ < 0)
+  if (epollfd_ < 0)                                                                     //在构造函数中判断，<0就abort()
   {
     LOG_SYSFATAL << "EPollPoller::EPollPoller";
   }
@@ -103,7 +103,7 @@ void EPollPoller::fillActiveChannels(int numEvents,
     assert(it != channels_.end());
     assert(it->second == channel);
 #endif
-    channel->set_revents(events_[i].events);
+    channel->set_revents(events_[i].events);                                        //把已发生的事件传给channel,写到通道当中
     activeChannels->push_back(channel);                                             //加入活跃事件数组，该数组在EventLoop的成员变量之中
   }
 }

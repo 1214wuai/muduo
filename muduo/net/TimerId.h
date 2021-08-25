@@ -40,7 +40,7 @@ class TimerId : public muduo::copyable
 
   // default copy-ctor, dtor and assignment are okay
 
-  friend class TimerQueue;
+  friend class TimerQueue;                                                  //友元，TimerQueue可以操作TimerId的私有数据
 
  private:
   Timer* timer_;

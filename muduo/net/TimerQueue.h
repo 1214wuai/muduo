@@ -42,43 +42,48 @@ class TimerQueue : noncopyable
   /// Schedules the callback to be run at given time,
   /// repeats if @c interval > 0.0.
   ///
-  /// Must be thread safe. Usually be called from other threads.
+  /// Must be thread safe. Usually be called from other threads.                    //线程安全的
   TimerId addTimer(TimerCallback cb,
                    Timestamp when,
                    double interval);
 
-  void cancel(TimerId timerId);
+  void cancel(TimerId timerId);                                                     //可以跨线程调用
 
  private:
 
   // FIXME: use unique_ptr<Timer> instead of raw pointers.
   // This requires heterogeneous comparison lookup (N3465) from C++14
   // so that we can find an T* in a set<unique_ptr<T>>.
-  typedef std::pair<Timestamp, Timer*> Entry;
-  typedef std::set<Entry> TimerList;
-  typedef std::pair<Timer*, int64_t> ActiveTimer;
-  typedef std::set<ActiveTimer> ActiveTimerSet;
 
+  //下面两个set可以说保存的是相同的东西，都是定时器，只不过排序方式不同.  处理两个Timer到期时间相同的情况
+  typedef std::pair<Timestamp, Timer*> Entry;                                       //set的key，是一个时间戳和定时器地址的pair
+  typedef std::set<Entry> TimerList;                                                //按照时间戳排序
+  typedef std::pair<Timer*, int64_t> ActiveTimer;                                   //定时器地址和序号
+  typedef std::set<ActiveTimer> ActiveTimerSet;                                     //按照定时器地址排序
+
+
+  //以下成员函数只可能在其所属的I/O线程中调用，因而不必加锁
+  //服务器性能杀手之一就是锁竞争，要尽可能少使用锁
   void addTimerInLoop(Timer* timer);
   void cancelInLoop(TimerId timerId);
   // called when timerfd alarms
-  void handleRead();
+  void handleRead();                                                                //定时器事件产生回调函数
   // move out all expired timers
-  std::vector<Entry> getExpired(Timestamp now);
-  void reset(const std::vector<Entry>& expired, Timestamp now);
+  std::vector<Entry> getExpired(Timestamp now);                                     //返回超时的定时器列表
+  void reset(const std::vector<Entry>& expired, Timestamp now);                     //对超时的定时器进行重置，因为超时的定时器可能是重复的定时器
 
-  bool insert(Timer* timer);
+  bool insert(Timer* timer);                                                        //插入定时器
 
-  EventLoop* loop_;
-  const int timerfd_;
-  Channel timerfdChannel_;
+  EventLoop* loop_;                                                                 //所属的event_loop
+  const int timerfd_;                                                               //timefd_create()所创建的定时器描述符
+  Channel timerfdChannel_;                                                          //timefd_create()所创建的定时器描述符?
   // Timer list sorted by expiration
-  TimerList timers_;
+  TimerList timers_;                                                                //定时器set，按时间戳排序
 
   // for cancel()
-  ActiveTimerSet activeTimers_;
-  bool callingExpiredTimers_; /* atomic */
-  ActiveTimerSet cancelingTimers_;
+  ActiveTimerSet activeTimers_;                                                     //活跃定时器列表，按定时器地址排序
+   bool callingExpiredTimers_; /* atomic */                                         //是否处于调用处理超时定时器当中
+   ActiveTimerSet cancelingTimers_;                                                 //保存的是被取消的定时器
 };
 
 }  // namespace net

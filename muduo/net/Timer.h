@@ -30,11 +30,11 @@ class Timer : noncopyable
     : callback_(std::move(cb)),
       expiration_(when),
       interval_(interval),
-      repeat_(interval > 0.0),
-      sequence_(s_numCreated_.incrementAndGet())
+      repeat_(interval > 0.0),                                                            //如果大于0就重复，此处double值比较，注意精度
+      sequence_(s_numCreated_.incrementAndGet())                                          //先加后获取，由于初始值s_numCreated为0，所以序号这里从1开始
   { }
 
-  void run() const
+  void run() const                                                                       //调用回调函数
   {
     callback_();
   }
@@ -48,13 +48,13 @@ class Timer : noncopyable
   static int64_t numCreated() { return s_numCreated_.get(); }
 
  private:
-  const TimerCallback callback_;
-  Timestamp expiration_;
-  const double interval_;
-  const bool repeat_;
-  const int64_t sequence_;
+  const TimerCallback callback_;                                                         //定时器回调函数，TimerCallback在callback.h文件中定义，类型void()
+  Timestamp expiration_;                                                                 //下一次的超时时刻
+  const double interval_;                                                                //超时时间间隔，如果是一次定时器，该值为0
+  const bool repeat_;                                                                    //是否重复
+  const int64_t sequence_;                                                               //定时器序号
 
-  static AtomicInt64 s_numCreated_;
+  static AtomicInt64 s_numCreated_;                                                      //定时器计数，当前已创建的定时器数量，原子int64_t类型，初始值为0
 };
 
 }  // namespace net
