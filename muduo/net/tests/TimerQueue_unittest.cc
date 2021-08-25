@@ -53,7 +53,7 @@ int main()
     loop.runAfter(9.001, std::bind(cancel, t3));                             //every3在9s之后被取消
 
     loop.loop();
-    print("main loop exits");                                                //main loop总是在监听19次之后就会结束。为啥？
+    print("main loop exits");                                                //main loop总是在监听19次之后就会结束。为啥？因为Print函数被调用20次之后会调用loop->quit()
   }
   sleep(1);
   {

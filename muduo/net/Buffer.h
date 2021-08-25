@@ -42,13 +42,13 @@ namespace net
 class Buffer : public muduo::copyable  // 缓存类
 {
  public:
-  static const size_t kCheapPrepend = 8;
-  static const size_t kInitialSize = 1024;
+  static const size_t kCheapPrepend = 8;                                                      //默认预存8个字节
+  static const size_t kInitialSize = 1024;                                                    //初始大小
 
   explicit Buffer(size_t initialSize = kInitialSize)
-    : buffer_(kCheapPrepend + initialSize),
-      readerIndex_(kCheapPrepend),
-      writerIndex_(kCheapPrepend)
+    : buffer_(kCheapPrepend + initialSize),                                                   //总大小为1032
+      readerIndex_(kCheapPrepend),                                                            //初始指向8
+      writerIndex_(kCheapPrepend)                                                             //初始指向8
   {
     assert(readableBytes() == 0);
     assert(writableBytes() == initialSize);
@@ -65,16 +65,16 @@ class Buffer : public muduo::copyable  // 缓存类
     std::swap(writerIndex_, rhs.writerIndex_);
   }
 
-  size_t readableBytes() const  // 缓存中可读字节数
+  size_t readableBytes() const                                                                // 缓存中可读字节数
   { return writerIndex_ - readerIndex_; }
 
-  size_t writableBytes() const  // 缓存中可写字节数
+  size_t writableBytes() const                                                                // 缓存中可写字节数
   { return buffer_.size() - writerIndex_; }
 
-  size_t prependableBytes() const
+  size_t prependableBytes() const                                                             // 预留大小
   { return readerIndex_; }
 
-  const char* peek() const  //  只读数据（看一眼数据），不会移动读指针
+  const char* peek() const  //  只读数据（看一眼数据），不会移动读指针                                              获取可读下标
   { return begin() + readerIndex_; }
 
   const char* findCRLF() const  // 搜索可读取数据中第一个 "\r\n"，并返回其地址
@@ -182,9 +182,9 @@ class Buffer : public muduo::copyable  // 缓存类
 
   void append(const char* /*restrict*/ data, size_t len)
   {
-    ensureWritableBytes(len);
-    std::copy(data, data+len, beginWrite());  // fist -> last copy to result
-    hasWritten(len);
+    ensureWritableBytes(len);                                                                     //确保缓冲区可写空间大于等于len，如果不足，需要扩充
+    std::copy(data, data+len, beginWrite());  // fist -> last copy to result                      追加数据
+    hasWritten(len);                                                                              //内部仅仅是写入后调整writeindex
   }
 
   void append(const void* /*restrict*/ data, size_t len)
@@ -194,9 +194,9 @@ class Buffer : public muduo::copyable  // 缓存类
 
   void ensureWritableBytes(size_t len)
   {
-    if (writableBytes() < len)
+    if (writableBytes() < len)                                                                     //如果可写数据小于len
     {
-      makeSpace(len);
+      makeSpace(len);                                                                              //增加空间
     }
     assert(writableBytes() >= len);
   }
@@ -360,10 +360,14 @@ class Buffer : public muduo::copyable  // 缓存类
     std::copy(d, d+len, begin()+readerIndex_);
   }
 
+  //收缩空间，保留reserver个字节，可能多次读写后buffer太大了，可以收缩，readable数据不会受到影响
   void shrink(size_t reserve)
   {
     // FIXME: use vector::shrink_to_fit() in C++ 11 if possible.
-    Buffer other;
+
+    //为什么要使用Buffer类型的other来收缩空间呢?如果不用这种方式，我们可选的有使用resize()
+    Buffer other;  //生成临时对像，保存readable内容，然后和自身交换，该临时对象再析构掉
+    //ensureWritableBytes()函数有两个功能，一个是空间不够resize空间，一个是空间足够内部腾挪，这里明显用的是后者。
     other.ensureWritableBytes(readableBytes()+reserve);
     other.append(toStringPiece());
     swap(other);
@@ -390,31 +394,32 @@ class Buffer : public muduo::copyable  // 缓存类
 
   void makeSpace(size_t len)  // 容量不够则扩容
   {
-    if (writableBytes() + prependableBytes() < len + kCheapPrepend)
+    if (writableBytes() + prependableBytes() < len + kCheapPrepend)             //确保空间是真的不够，而不是挪动就可以腾出空间
     {
       // FIXME: move readable data
       buffer_.resize(writerIndex_+len);
     }
     else
     {
+      //内部腾挪就足够append，那么就内部腾挪一下
       // move readable data to the front, make space inside buffer
       assert(kCheapPrepend < readerIndex_);
       size_t readable = readableBytes();
-      std::copy(begin()+readerIndex_,
+      std::copy(begin()+readerIndex_,                                           //原来的可读部分全部copy到Prepend位置，相当于向前挪动，为writeable留出空间
                 begin()+writerIndex_,
                 begin()+kCheapPrepend);
-      readerIndex_ = kCheapPrepend;
+      readerIndex_ = kCheapPrepend;                                             //更新下标
       writerIndex_ = readerIndex_ + readable;
       assert(readable == readableBytes());
     }
   }
 
  private:
-  std::vector<char> buffer_;  // 储存缓存数据，可扩容
-  size_t readerIndex_;  // 记录读指针，从buffer读取n字节，读指针+n
-  size_t writerIndex_;  // 记录写指针，向buffer写入n字节，写指针+n
+  std::vector<char> buffer_;                                                    // 储存缓存数据，可扩容
+  size_t readerIndex_;                                                          // 记录读指针，从buffer读取n字节，读指针+n
+  size_t writerIndex_;                                                          // 记录写指针，向buffer写入n字节，写指针+n
 
-  static const char kCRLF[];  // "\r\n"
+  static const char kCRLF[];  // "\r\n"                                            使用柔性数组
 };
 
 }  // namespace net
