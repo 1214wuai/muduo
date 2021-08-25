@@ -334,7 +334,7 @@ void EventLoop::doPendingFunctors()
   callingPendingFunctors_ = true;
                                                                                      //临界区，这里使用了一个栈上变量functors和pendingFunctors交换
   {
-  MutexLockGuard lock(mutex_);
+  MutexLockGuard lock(mutex_);                                                       //尽量使临界区变小
   functors.swap(pendingFunctors_);
   }
 
