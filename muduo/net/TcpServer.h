@@ -97,23 +97,23 @@ class TcpServer : noncopyable
   /// Not thread safe, but in loop
   void removeConnectionInLoop(const TcpConnectionPtr& conn);
 
-  typedef std::map<string, TcpConnectionPtr> ConnectionMap;
+  typedef std::map<string, TcpConnectionPtr> ConnectionMap;                                      //使用map维护了一个连接列表
 
   EventLoop* loop_;  // the acceptor loop
-  const string ipPort_;
-  const string name_;
+  const string ipPort_;                                                                          //服务器端口
+  const string name_;                                                                            //服务器名
   std::unique_ptr<Acceptor> acceptor_; // avoid revealing Acceptor
   std::shared_ptr<EventLoopThreadPool> threadPool_;
   ConnectionCallback connectionCallback_;
   MessageCallback messageCallback_;  // 每个连接的消息处理回调
   WriteCompleteCallback writeCompleteCallback_;
   ThreadInitCallback threadInitCallback_;
-  AtomicInt32 started_;
+  AtomicInt32 started_;                                                                         //启动标记实际上是bool量，只不过用原子操作在0和1之间切换
   // always in loop thread
-  int nextConnId_;
+  int nextConnId_;                                                                              //下一个连接id
 
   // 保存每个链接
-  ConnectionMap connections_;
+  ConnectionMap connections_;                                                                   //连接列表
 };
 
 }  // namespace net

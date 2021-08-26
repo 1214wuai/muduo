@@ -59,7 +59,7 @@ class EventLoopThreadPool : noncopyable
   bool started_;
   int numThreads_;
   int next_;
-  std::vector<std::unique_ptr<EventLoopThread>> threads_;
+  std::vector<std::unique_ptr<EventLoopThread>> threads_;                                     //该数组存储I/O线程，也就代表线程池
   std::vector<EventLoop*> loops_;
 };
 

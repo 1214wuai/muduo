@@ -47,14 +47,14 @@ class Acceptor : noncopyable
   // bool listenning() const { return listening(); }
 
  private:
-  void handleRead();
+  void handleRead();                                                                      //可读回调函数
 
-  EventLoop* loop_;
-  Socket acceptSocket_;
-  Channel acceptChannel_;
-  NewConnectionCallback newConnectionCallback_;
-  bool listening_;
-  int idleFd_;
+  EventLoop* loop_;                                                                       //loop指针
+  Socket acceptSocket_;                                                                   //监听套接字
+  Channel acceptChannel_;                                                                 //和监听套接字绑定的通道
+  NewConnectionCallback newConnectionCallback_;                                           //一旦有新连接发生执行的回调函数
+  bool listening_;                                                                        //acceptChannel所处的EventLoop是否处于监听状态
+  int idleFd_;                                                                            //用来解决文件描述符过多引起电平触发不断触发的问题
 };
 
 }  // namespace net

@@ -31,7 +31,7 @@ int main()
     printf("Single thread %p:\n", &loop);
     EventLoopThreadPool model(&loop, "single");
     model.setThreadNum(0);
-    model.start(init);
+    model.start(init);                                                                      //传入的函数的类型是固定的
     assert(model.getNextLoop() == &loop);
     assert(model.getNextLoop() == &loop);
     assert(model.getNextLoop() == &loop);
