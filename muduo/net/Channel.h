@@ -74,7 +74,7 @@ class Channel : noncopyable
   void disableReading() { events_ &= ~kReadEvent; update(); }
   void enableWriting() { events_ |= kWriteEvent; update(); }
   void disableWriting() { events_ &= ~kWriteEvent; update(); }
-  void disableAll() { events_ = kNoneEvent; update(); }
+  void disableAll() { events_ = kNoneEvent; update(); }                    //取消对所有事件的监听
   bool isWriting() const { return events_ & kWriteEvent; }
   bool isReading() const { return events_ & kReadEvent; }
 

@@ -247,7 +247,7 @@ ssize_t sockets::readv(int sockfd, const struct iovec *iov, int iovcnt)
 
 ssize_t sockets::write(int sockfd, const void *buf, size_t count)
 {
-  return ::write(sockfd, buf, count);
+  return ::write(sockfd, buf, count);                                                        //如果顺利write()会返回实际写入的字节数（len）
 }
 
 void sockets::close(int sockfd)
