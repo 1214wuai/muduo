@@ -168,7 +168,7 @@ void EPollPoller::removeChannel(Channel* channel)
   (void)n;
   assert(n == 1);
 
-  if (index == kAdded)                                                              //如果是kDeleted状态的，在之前在updatechannel中就已经被移除了，值需要清理channels_
+  if (index == kAdded)                                                              //如果是kDeleted状态的，在之前在updatechannel中就已经被移除了，只需要清理channels_
   {
     update(EPOLL_CTL_DEL, channel);
   }

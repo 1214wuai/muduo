@@ -324,25 +324,25 @@ void TcpConnection::stopReadInLoop()
 void TcpConnection::connectEstablished()
 {
   loop_->assertInLoopThread();
-  assert(state_ == kConnecting);
+  assert(state_ == kConnecting);                                         //初始化为这个状态
   setState(kConnected);
   channel_->tie(shared_from_this());
-  channel_->enableReading();                                             // 让EventLoop监听channel_的读事件
+  channel_->enableReading();                                             //让EventLoop监听channel_的读事件
 
   connectionCallback_(shared_from_this());
 }
 
-void TcpConnection::connectDestroyed()
+void TcpConnection::connectDestroyed()                            //TcpServer的析构函数会执行这个额函数
 {
   loop_->assertInLoopThread();
   if (state_ == kConnected)
   {
     setState(kDisconnected);
-    channel_->disableAll();
+    channel_->disableAll();                                                  //取消该channel对所有事件的监听
 
     connectionCallback_(shared_from_this());
   }
-  channel_->remove();
+  channel_->remove();                                                        //最终调用EpollPoller的removeChannel
 }
 
 void TcpConnection::handleRead(Timestamp receiveTime)
@@ -418,7 +418,7 @@ void TcpConnection::handleClose()                                               
   TcpConnectionPtr guardThis(shared_from_this());                                              //C++11中的shared_from_this()来源于boost中的enable_shared_form_this类和shared_from_this()函数，功能为返回一个当前类的std::share_ptr
   connectionCallback_(guardThis);
   // must be the last line
-  closeCallback_(guardThis);
+  closeCallback_(guardThis);                                                                   //这个函数会在TcpServer的newConnection被设置，最终执行connectDestroyed()函数
 }
 
 void TcpConnection::handleError()

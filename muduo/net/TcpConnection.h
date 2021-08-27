@@ -121,7 +121,7 @@ class TcpConnection : noncopyable,
   // called when TcpServer accepts a new connection
   void connectEstablished();   // should be called only once                               //当TcpServer接收新连接时会调用
   // called when TcpServer has removed me from its map
-  void connectDestroyed();  // should be called only once                                  //当TcpServer将该对象从connectmap中移除时，会调用该函数
+  void connectDestroyed();  // should be called only once                                  //当TcpServer将该对象从connectmap中移除时，会调用该函数，回调过来的。
 
 /*****************************************************************************下面是私有成员和函数*************************************************************************/
  private:

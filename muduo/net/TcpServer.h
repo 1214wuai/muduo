@@ -33,7 +33,7 @@ class EventLoopThreadPool;
 class TcpServer : noncopyable
 {
  public:
-  typedef std::function<void(EventLoop*)> ThreadInitCallback;
+  typedef std::function<void(EventLoop*)> ThreadInitCallback;                             //线程初始化函数，也可以不设置
   enum Option
   {
     kNoReusePort,
@@ -61,7 +61,7 @@ class TcpServer : noncopyable
   /// - 1 means all I/O in another thread.
   /// - N means a thread pool with N threads, new connections
   ///   are assigned on a round-robin basis.
-  void setThreadNum(int numThreads);
+  void setThreadNum(int numThreads);                                                             //设置I/O线程池中线程的数量，在start函数前调用
   void setThreadInitCallback(const ThreadInitCallback& cb)
   { threadInitCallback_ = cb; }
   /// valid after calling start()
@@ -72,48 +72,48 @@ class TcpServer : noncopyable
   ///
   /// It's harmless to call it multiple times.
   /// Thread safe.
-  void start();
+  void start();                                                                                  //如果处于监听状态就启动服务器,该函数可以被调用多次,线程安全的函数
 
   /// Set connection callback.
   /// Not thread safe.
-  void setConnectionCallback(const ConnectionCallback& cb)
+  void setConnectionCallback(const ConnectionCallback& cb)                                       //设置建立连接成功后的回调,不是线程安全的
   { connectionCallback_ = cb; }
 
   /// Set message callback.
   /// Not thread safe.
-  void setMessageCallback(const MessageCallback& cb)
+  void setMessageCallback(const MessageCallback& cb)                                             //设置消息回调,不是线程安全的
   { messageCallback_ = cb; }
 
   /// Set write complete callback.
   /// Not thread safe.
-  void setWriteCompleteCallback(const WriteCompleteCallback& cb)
+  void setWriteCompleteCallback(const WriteCompleteCallback& cb)                                 //设置写回调，不是线程安全的
   { writeCompleteCallback_ = cb; }
 
  private:
   /// Not thread safe, but in loop
-  void newConnection(int sockfd, const InetAddress& peerAddr);
+  void newConnection(int sockfd, const InetAddress& peerAddr);                                   //acceptor设置的回调
   /// Thread safe.
-  void removeConnection(const TcpConnectionPtr& conn);
+  void removeConnection(const TcpConnectionPtr& conn);                                           //移除已建立的连接
   /// Not thread safe, but in loop
-  void removeConnectionInLoop(const TcpConnectionPtr& conn);
+  void removeConnectionInLoop(const TcpConnectionPtr& conn);                                     //实际上的移除连接的操作
 
-  typedef std::map<string, TcpConnectionPtr> ConnectionMap;                                      //使用map维护了一个连接列表
+  typedef std::map<string, TcpConnectionPtr> ConnectionMap;                                      //使用map维护了一个连接列表，连接名字:TcpConnection的share_ptr
 
   EventLoop* loop_;  // the acceptor loop
   const string ipPort_;                                                                          //服务器端口
   const string name_;                                                                            //服务器名
-  std::unique_ptr<Acceptor> acceptor_; // avoid revealing Acceptor
-  std::shared_ptr<EventLoopThreadPool> threadPool_;
-  ConnectionCallback connectionCallback_;
-  MessageCallback messageCallback_;  // 每个连接的消息处理回调
+  std::unique_ptr<Acceptor> acceptor_; // avoid revealing Acceptor                               //起到监听作用的对象accept()
+  std::shared_ptr<EventLoopThreadPool> threadPool_;                                              //I/O线程池
+  ConnectionCallback connectionCallback_;                                                        //有一个默认的函数，内部就是输出本地的地址，对端的地址，连接状态
+  MessageCallback messageCallback_;                                                              //每个连接的消息处理回调
   WriteCompleteCallback writeCompleteCallback_;
-  ThreadInitCallback threadInitCallback_;
-  AtomicInt32 started_;                                                                         //启动标记实际上是bool量，只不过用原子操作在0和1之间切换
+  ThreadInitCallback threadInitCallback_;                                                        //线程初始化函数
+  AtomicInt32 started_;                                                                          //启动标记实际上是bool量，只不过用原子操作在0和1之间切换
   // always in loop thread
-  int nextConnId_;                                                                              //下一个连接id
+  int nextConnId_;                                                                               //下一个连接id
 
   // 保存每个链接
-  ConnectionMap connections_;                                                                   //连接列表
+  ConnectionMap connections_;                                                                    //连接列表
 };
 
 }  // namespace net

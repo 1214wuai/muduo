@@ -44,7 +44,7 @@ Channel::~Channel()
   }
 }
 
-void Channel::tie(const std::shared_ptr<void>& obj)
+void Channel::tie(const std::shared_ptr<void>& obj)                         //在TcpConnection的connectEstablished函数中调用，进行生存期控制
 {
   tie_ = obj;
   tied_ = true;
@@ -56,7 +56,7 @@ void Channel::update()                                                      //更
   loop_->updateChannel(this);
 }
 
-void Channel::remove()                                                      //移除
+void Channel::remove()                                                      //移除channel，最终到epoll中移除
 {
   assert(isNoneEvent());
   addedToLoop_ = false;
