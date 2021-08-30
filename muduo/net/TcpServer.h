@@ -89,6 +89,13 @@ class TcpServer : noncopyable
   void setWriteCompleteCallback(const WriteCompleteCallback& cb)                                 //设置写回调，不是线程安全的
   { writeCompleteCallback_ = cb; }
 
+   void Print()
+   {
+       ConnectionMap::reverse_iterator it;
+       for(it = connections_.rbegin(); it != connections_.rend(); it++)
+         std::cout<<"ptr_use_count:"<<it->second.use_count()<<std::endl;
+   }
+
  private:
   /// Not thread safe, but in loop
   void newConnection(int sockfd, const InetAddress& peerAddr);                                   //acceptor设置的回调

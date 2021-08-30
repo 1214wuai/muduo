@@ -219,6 +219,7 @@ int sockets::accept(int sockfd, struct sockaddr_in6* addr)
 
 //客户端调用
 //addr：传入参数，指定服务器端地址信息，含IP地址和端口号
+//返回值：成功返回0，失败返回-1，设置errno
 int sockets::connect(int sockfd, const struct sockaddr* addr)
 {
   return ::connect(sockfd, addr, static_cast<socklen_t>(sizeof(struct sockaddr_in6)));

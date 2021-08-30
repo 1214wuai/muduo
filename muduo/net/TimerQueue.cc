@@ -129,7 +129,7 @@ TimerQueue::TimerQueue(EventLoop* loop)
   timerfdChannel_.setReadCallback(
       std::bind(&TimerQueue::handleRead, this));
   // we are always reading the timerfd, we disarm it with timerfd_settime.
-  timerfdChannel_.enableReading();                                                         //注册
+  timerfdChannel_.enableReading();                                                         //注册到poll中，需要被监听起来
 }
 
 TimerQueue::~TimerQueue()

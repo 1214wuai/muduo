@@ -44,9 +44,9 @@ Channel::~Channel()
   }
 }
 
-void Channel::tie(const std::shared_ptr<void>& obj)                         //在TcpConnection的connectEstablished函数中调用，进行生存期控制
+void Channel::tie(const std::shared_ptr<void>& obj)                         //有新连接到来时，在TcpConnection的connectEstablished函数中调用，进行生存期控制
 {
-  tie_ = obj;
+  tie_ = obj;                                                               //是把TcpConnection型智能指针存入了Channel之中,tie_是weak_ptr
   tied_ = true;
 }
 
@@ -66,9 +66,9 @@ void Channel::remove()                                                      //移
 void Channel::handleEvent(Timestamp receiveTime)                            //事件到来调用handleEvent处理
 {
   std::shared_ptr<void> guard;                                              //保证线程安全，保证不会调用一个销毁了的对象
-  if (tied_)                                                                //这个标志位与TcpConnection有关
+  if (tied_)                                                                //这个标志位与TcpConnection有关，在连接建立的时候，该标志位被设置为true，
   {
-    guard = tie_.lock();
+    guard = tie_.lock();                                                    //如果此时tie_管理的对象不为空，则返回一个shared_ptr，并且保证给tie_赋值的指针不被释放，此时引用计数变为2
     if (guard)
     {
       handleEventWithGuard(receiveTime);

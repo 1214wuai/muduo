@@ -326,23 +326,24 @@ void TcpConnection::connectEstablished()
   loop_->assertInLoopThread();
   assert(state_ == kConnecting);                                         //初始化为这个状态
   setState(kConnected);
-  channel_->tie(shared_from_this());
+  channel_->tie(shared_from_this());                                     //当类A被share_ptr管理，且在类A的成员函数里需要把当前类对象作为参数传给其他函数时，就需要传递一个指向自身的share_ptr
+                                                                         //返回该对象的一个share_ptr
   channel_->enableReading();                                             //让EventLoop监听channel_的读事件
 
   connectionCallback_(shared_from_this());
 }
 
-void TcpConnection::connectDestroyed()                            //TcpServer的析构函数会执行这个额函数
+void TcpConnection::connectDestroyed()                                   //TcpServer的析构函数会执行这个额函数 Todo：为什么能够删除TcpConnection
 {
   loop_->assertInLoopThread();
   if (state_ == kConnected)
   {
     setState(kDisconnected);
-    channel_->disableAll();                                                  //取消该channel对所有事件的监听
+    channel_->disableAll();                                             //取消该channel对所有事件的监听
 
     connectionCallback_(shared_from_this());
   }
-  channel_->remove();                                                        //最终调用EpollPoller的removeChannel
+  channel_->remove();                                                   //最终调用EpollPoller的removeChannel，从通道和Poller中移除
 }
 
 void TcpConnection::handleRead(Timestamp receiveTime)

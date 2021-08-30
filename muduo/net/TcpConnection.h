@@ -42,6 +42,10 @@ class Socket;
 //该类对象，客户端和服务器都会用到
 //这是一个接口类，所以不用暴露太多细节
 
+
+
+//该类中使用shared_from_this()，需要继承enable_shared_from_this
+
 class TcpConnection : noncopyable,
                       public std::enable_shared_from_this<TcpConnection>
 {
@@ -165,7 +169,7 @@ class TcpConnection : noncopyable,
   //        bytesReceived_, bytesSent_
 };
 
-typedef std::shared_ptr<TcpConnection> TcpConnectionPtr;
+typedef std::shared_ptr<TcpConnection> TcpConnectionPtr;//此处用shared_ptr来管理TcpConnection对象，是因为销毁连接的时候，TcpConnection的生命周期要长于HandleEvent函数
 
 }  // namespace net
 }  // namespace muduo

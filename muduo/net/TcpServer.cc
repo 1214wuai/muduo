@@ -92,7 +92,7 @@ void TcpServer::newConnection(int sockfd, const InetAddress& peerAddr)
                                           connName,
                                           sockfd,
                                           localAddr,
-                                          peerAddr));                                  //构建TcpConnection
+                                          peerAddr));                                  //构建TcpConnectionPtr，share_ptr
   connections_[connName] = conn;                                                       //将新连接加入map中
   conn->setConnectionCallback(connectionCallback_);                                    //如果没有特别设置，将会会调用默认的，打印一些信息
   conn->setMessageCallback(messageCallback_);                                          //设置读事件处理回调函数
@@ -101,7 +101,8 @@ void TcpServer::newConnection(int sockfd, const InetAddress& peerAddr)
       std::bind(&TcpServer::removeConnection, this, _1)); // FIXME: unsafe             //在TcpConnection的handleClose函数中执行
 
   // 让ioLoop的channel监听这个连接
-  ioLoop->runInLoop(std::bind(&TcpConnection::connectEstablished, conn));              //在I/O线程中调用某个函数，该函数可以跨线程调用
+  ioLoop->runInLoop(std::bind(&TcpConnection::connectEstablished, conn));              //在I/O线程中调用某个函数，该函数可以跨线程调用,传入的是share_ptr
+  Print();
 }
 
 void TcpServer::removeConnection(const TcpConnectionPtr& conn)

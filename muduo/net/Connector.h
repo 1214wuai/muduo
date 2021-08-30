@@ -25,6 +25,7 @@ namespace net
 class Channel;
 class EventLoop;
 
+//负责主动发起连接,不负责创建socket,只负责连接的建立
 class Connector : noncopyable,
                   public std::enable_shared_from_this<Connector>
 {
@@ -59,13 +60,13 @@ class Connector : noncopyable,
   int removeAndResetChannel();
   void resetChannel();
 
-  EventLoop* loop_;
-  InetAddress serverAddr_;
+  EventLoop* loop_;                                                                    //所属的EventLoop
+  InetAddress serverAddr_;                                                             //要连接的server地址
   bool connect_; // atomic
   States state_;  // FIXME: use atomic variable
-  std::unique_ptr<Channel> channel_;
-  NewConnectionCallback newConnectionCallback_;
-  int retryDelayMs_;
+  std::unique_ptr<Channel> channel_;                                                   //对应的channel
+  NewConnectionCallback newConnectionCallback_;                                        //连接成功时的回调函数
+  int retryDelayMs_;                                                                   //重连间隔时间
 };
 
 }  // namespace net

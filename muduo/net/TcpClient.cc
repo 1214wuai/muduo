@@ -63,6 +63,9 @@ TcpClient::TcpClient(EventLoop* loop,
     connect_(true),
     nextConnId_(1)
 {
+  //将Connector的连接回调函数设置为TcpClient::newConnection
+  //该函数在Connector::handleWrite中被调用，可写就表示连接已经建立成功了（但是还需判断是否出错）
+
   connector_->setNewConnectionCallback(
       std::bind(&TcpClient::newConnection, this, _1));
   // FIXME setConnectFailedCallback
@@ -85,7 +88,7 @@ TcpClient::~TcpClient()
   {
     assert(loop_ == conn->getLoop());
     // FIXME: not 100% safe, if we are in different thread
-    CloseCallback cb = std::bind(&detail::removeConnection, loop_, _1);
+    CloseCallback cb = std::bind(&detail::removeConnection, loop_, _1);                      //调用TcpConnection::connectDestroyed
     loop_->runInLoop(
         std::bind(&TcpConnection::setCloseCallback, conn, cb));
     if (unique)
@@ -101,13 +104,13 @@ TcpClient::~TcpClient()
   }
 }
 
-void TcpClient::connect()
+void TcpClient::connect()                                                                       //请求连接
 {
   // FIXME: check state
   LOG_INFO << "TcpClient::connect[" << name_ << "] - connecting to "
            << connector_->serverAddress().toIpPort();
   connect_ = true;
-  connector_->start();
+  connector_->start();                                                                          //-->Connector::startInLoop()-->Connector::connect()
 }
 
 void TcpClient::disconnect()
@@ -118,7 +121,7 @@ void TcpClient::disconnect()
     MutexLockGuard lock(mutex_);
     if (connection_)
     {
-      connection_->shutdown();
+      connection_->shutdown();                                                                 //TcpConnection::shutdown()，关闭写端
     }
   }
 }
@@ -126,9 +129,10 @@ void TcpClient::disconnect()
 void TcpClient::stop()
 {
   connect_ = false;
-  connector_->stop();
+  connector_->stop();                                                                         //最终执行channel_.reset();
 }
 
+//新连接的回调函数,将新连接封装为TcpConnection交给TcpClient来管理
 void TcpClient::newConnection(int sockfd)
 {
   loop_->assertInLoopThread();
@@ -159,7 +163,7 @@ void TcpClient::newConnection(int sockfd)
   conn->connectEstablished();
 }
 
-void TcpClient::removeConnection(const TcpConnectionPtr& conn)
+void TcpClient::removeConnection(const TcpConnectionPtr& conn)                        //connection的close回调函数，调用TcpConnection::connectDestroyed
 {
   loop_->assertInLoopThread();
   assert(loop_ == conn->getLoop());

@@ -22,6 +22,7 @@ namespace net
 class Connector;
 typedef std::shared_ptr<Connector> ConnectorPtr;
 
+//TCPClient使用Conneccor发起连接, 连接建立成功后, 用socket创建TcpConnection来管理连接, 每个TcpClient class只管理一个TcpConnecction
 class TcpClient : noncopyable
 {
  public:
@@ -70,18 +71,20 @@ class TcpClient : noncopyable
   /// Not thread safe, but in loop
   void removeConnection(const TcpConnectionPtr& conn);
 
-  EventLoop* loop_;
-  ConnectorPtr connector_; // avoid revealing Connector
-  const string name_;
+  EventLoop* loop_;                                                                                //用户创建传入的EventLoop
+  ConnectorPtr connector_; // avoid revealing Connector                                            //指向Connector的shared_ptr
+  const string name_;                                                                              //用户指定的名字
+
+  //这些回调函数都需要显示设置
   ConnectionCallback connectionCallback_;
   MessageCallback messageCallback_;
   WriteCompleteCallback writeCompleteCallback_;
-  bool retry_;   // atomic
+  bool retry_;   // atomic                                                                         //连接断开后是否重连
   bool connect_; // atomic
   // always in loop thread
-  int nextConnId_;
+  int nextConnId_;                                                                                 //name_+nextConnId_用于标识一个连接
   mutable MutexLock mutex_;
-  TcpConnectionPtr connection_ GUARDED_BY(mutex_);
+  TcpConnectionPtr connection_ GUARDED_BY(mutex_);                                                 //TcpConnection
 };
 
 }  // namespace net
