@@ -175,7 +175,7 @@ void TcpConnection::sendInLoop(const void* data, size_t len)                    
   }
 
   assert(remaining <= len);
-  if (!faultError && remaining > 0)
+  if (!faultError && remaining > 0)                                                     //send调用一次write还没有写完。
   {
     size_t oldLen = outputBuffer_.readableBytes();
     if (oldLen + remaining >= highWaterMark_
@@ -316,12 +316,12 @@ void TcpConnection::stopReadInLoop()
   loop_->assertInLoopThread();
   if (reading_ || channel_->isReading())
   {
-    channel_->disableReading();                                         //取消关注读事件
+    channel_->disableReading();                                          //取消关注读事件
     reading_ = false;
   }
 }
 
-void TcpConnection::connectEstablished()
+void TcpConnection::connectEstablished()                                 //会执行一下connectionCallback回调
 {
   loop_->assertInLoopThread();
   assert(state_ == kConnecting);                                         //初始化为这个状态

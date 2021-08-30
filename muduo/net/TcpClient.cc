@@ -81,7 +81,7 @@ TcpClient::~TcpClient()
   bool unique = false;
   {
     MutexLockGuard lock(mutex_);
-    unique = connection_.unique();
+    unique = connection_.unique();                                                            //查看share_ptr的引用计数是否为1，如果为1则返回true。
     conn = connection_;
   }
   if (conn)
@@ -96,11 +96,11 @@ TcpClient::~TcpClient()
       conn->forceClose();
     }
   }
-  else
+  else                                                                                      //此时的conn还为空，说明连接还未建立起来
   {
-    connector_->stop();
+    connector_->stop();                                                                     //马上去停止连接的建立
     // FIXME: HACK
-    loop_->runAfter(1, std::bind(&detail::removeConnector, connector_));
+    loop_->runAfter(1, std::bind(&detail::removeConnector, connector_));                    //1s后再执行renoveCinnector(该函数目前啥也没做)
   }
 }
 
@@ -151,8 +151,8 @@ void TcpClient::newConnection(int sockfd)
                                           localAddr,
                                           peerAddr));
 
-  conn->setConnectionCallback(connectionCallback_);
-  conn->setMessageCallback(messageCallback_);
+  conn->setConnectionCallback(connectionCallback_);                                         //如果没有显示设置，则使用构造时的默认函数
+  conn->setMessageCallback(messageCallback_);                                               //有默认函数，也可显示设置
   conn->setWriteCompleteCallback(writeCompleteCallback_);
   conn->setCloseCallback(
       std::bind(&TcpClient::removeConnection, this, _1)); // FIXME: unsafe
@@ -160,7 +160,7 @@ void TcpClient::newConnection(int sockfd)
     MutexLockGuard lock(mutex_);
     connection_ = conn;
   }
-  conn->connectEstablished();
+  conn->connectEstablished();                                                               //关注可读，会执行一下connectionCallback_回调函数
 }
 
 void TcpClient::removeConnection(const TcpConnectionPtr& conn)                        //connection的close回调函数，调用TcpConnection::connectDestroyed

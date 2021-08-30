@@ -139,7 +139,7 @@ void Connector::connecting(int sockfd)
 
   // channel_->tie(shared_from_this()); is not working,
   // as channel_ is not managed by shared_ptr
-  channel_->enableWriting();                                                                       //注册可写事件，会立马触发可写事件的回调，也就是handleWrite函数
+  channel_->enableWriting();                                                                       //注册可写事件，只要connect成功，则会立马触发可写事件的回调，也就是handleWrite函数
 }
 
 int Connector::removeAndResetChannel()

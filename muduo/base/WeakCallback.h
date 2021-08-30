@@ -116,6 +116,11 @@ WeakCallback<CLASS, ARGS...> makeWeakCallback(const std::shared_ptr<CLASS>& obje
 
     避免使用独立两个独立的shared_ptr来存储同一个指针
 
+    在C++20中被移除的 unique()作为std::shared_ptr的成员函数，它检查当前shared_ptr持有的对象，是不是该对象的唯一持有者。也就是说检查shard_ptr的引用计数是否为1。大概的实现如下
+    bool unique() {
+      return this->use_count() == 1;
+    }
+
  C++11 weak_ptr用来解决shared_ptr的循环引用的问题
  只可以从一个 shared_ptr 或另一个 weak_ptr 对象构造, 它的构造和析构不会引起引用记数的增加或减少.
  同时weak_ptr 没有重载*和->但可以使用 lock 获得一个可用的 shared_ptr 对象

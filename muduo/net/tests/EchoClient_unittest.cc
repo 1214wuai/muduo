@@ -26,9 +26,9 @@ class EchoClient : noncopyable
       client_(loop, listenAddr, "EchoClient"+id)
   {
     client_.setConnectionCallback(
-        std::bind(&EchoClient::onConnection, this, _1));
+        std::bind(&EchoClient::onConnection, this, _1));                              //在TcpClient::newConnection中被设置为TcpConnection的连接回调，当连接成功时会在connectEstablished()中调用该函数。
     client_.setMessageCallback(
-        std::bind(&EchoClient::onMessage, this, _1, _2, _3));
+        std::bind(&EchoClient::onMessage, this, _1, _2, _3));                         //当连接可读，并且读成功之后会调用该函数
     //client_.enableRetry();
   }
 
@@ -39,7 +39,7 @@ class EchoClient : noncopyable
   // void stop();
 
  private:
-  void onConnection(const TcpConnectionPtr& conn)
+  void onConnection(const TcpConnectionPtr& conn)                                    //第一个连接连接上之后，会执行这个回调函数，建立第二个连接，依次循环，直到连接建立完毕
   {
     LOG_TRACE << conn->localAddress().toIpPort() << " -> "
         << conn->peerAddress().toIpPort() << " is "

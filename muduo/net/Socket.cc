@@ -134,6 +134,32 @@ void Socket::setKeepAlive(bool on)
   ::setsockopt(sockfd_, SOL_SOCKET, SO_KEEPALIVE,
                &optval, static_cast<socklen_t>(sizeof optval));
   //如果TRUE，套接字就会进行配置，在会话过程中发送”保持活动”消息
+  //KeepAlive通过定时发送探测包来探测连接的对端是否存活
+
+  /*
+  常见的几种使用场景：
+    检测挂掉的连接（导致连接挂掉的原因很多，如服务停止、网络波动、宕机、应用重启等）
+    防止因为网络不活动而断连（使用NAT代理或者防火墙的时候，经常会出现这种问题）
+    TCP层面的心跳检测
+
+
+  一般我们使用KeepAlive时会修改空闲时长，避免资源浪费，系统内核会为每一个TCP连接
+  建立一个保护记录，相对于应用层面效率更高。
+  在Linux中我们可以通过修改 /etc/sysctl.conf 的全局配置：7200s就是两个小时
+
+    net.ipv4.tcp_keepalive_time=7200
+    net.ipv4.tcp_keepalive_intvl=75
+    net.ipv4.tcp_keepalive_probes=9
+  KeepAlive默认情况下是关闭的，可以被上层应用开启和关闭
+tcp_keepalive_time: KeepAlive的空闲时长，或者说每次正常发送心跳的周期，默认值为7200s（2小时）
+tcp_keepalive_intvl: KeepAlive探测包的发送间隔，默认值为75s
+tcp_keepalive_probes: 在tcp_keepalive_time之后，没有接收到对方确认，继续发送保活探测包次数，默认值为9（次）
+
+  和Http中Keep-Alive的关系
+    HTTP协议的Keep-Alive意图在于连接复用，同一个连接上串行方式传递请求-响应数据
+    TCP的KeepAlive机制意图在于保活、心跳，检测连接错误
+
+  */
   // FIXME CHECK
 }
 
