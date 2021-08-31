@@ -107,7 +107,7 @@ class TcpServer : noncopyable
   typedef std::map<string, TcpConnectionPtr> ConnectionMap;                                      //使用map维护了一个连接列表，连接名字:TcpConnection的share_ptr
 
   EventLoop* loop_;  // the acceptor loop
-  const string ipPort_;                                                                          //服务器端口
+  const string ipPort_;                                                                          //服务器:端口
   const string name_;                                                                            //服务器名
   std::unique_ptr<Acceptor> acceptor_; // avoid revealing Acceptor                               //起到监听作用的对象accept()
   std::shared_ptr<EventLoopThreadPool> threadPool_;                                              //I/O线程池
@@ -119,8 +119,7 @@ class TcpServer : noncopyable
   // always in loop thread
   int nextConnId_;                                                                               //下一个连接id
 
-  // 保存每个链接
-  ConnectionMap connections_;                                                                    //连接列表
+  ConnectionMap connections_;                                                                    //连接列表 保存每个链接
 };
 
 }  // namespace net

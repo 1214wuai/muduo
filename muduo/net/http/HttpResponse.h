@@ -62,15 +62,15 @@ class HttpResponse : public muduo::copyable
   void setBody(const string& body)
   { body_ = body; }
 
-  void appendToBuffer(Buffer* output) const;
+  void appendToBuffer(Buffer* output) const;//将HTTP响应封装成buffer
 
  private:
-  std::map<string, string> headers_;
-  HttpStatusCode statusCode_;
+  std::map<string, string> headers_;//请求头
+  HttpStatusCode statusCode_;//状态码
   // FIXME: add http version
-  string statusMessage_;
-  bool closeConnection_;
-  string body_;
+  string statusMessage_;//状态码解释
+  bool closeConnection_;//是否关闭长连接标志
+  string body_;//响应正文
 };
 
 }  // namespace net

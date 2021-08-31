@@ -50,7 +50,7 @@ class HttpRequest : public muduo::copyable
   Version getVersion() const
   { return version_; }
 
-  bool setMethod(const char* start, const char* end)
+  bool setMethod(const char* start, const char* end)                         //设置请求方法
   {
     assert(method_ == kInvalid);
     string m(start, end);
@@ -132,20 +132,28 @@ class HttpRequest : public muduo::copyable
   Timestamp receiveTime() const
   { return receiveTime_; }
 
-  void addHeader(const char* start, const char* colon, const char* end)
+  void addHeader(const char* start, const char* colon, const char* end)      //添加请求头
   {
     string field(start, colon);
     ++colon;
-    while (colon < end && isspace(*colon))
+    /*
+    ispunct
+    　　语法:
+    　　int ispunct( int ch );
+    　　功能：如果参数是除字母，数字和空格外可打印字符，函数返回非零值，否则返回零值。
+    isspace
+        若判断字符ch为空空格、制表符或换行符，函数返回非零值，否则返回零值。
+    */
+    while (colon < end && isspace(*colon))                                      //去除value开头的空格
     {
       ++colon;
     }
     string value(colon, end);
-    while (!value.empty() && isspace(value[value.size()-1]))
+    while (!value.empty() && isspace(value[value.size()-1]))                    //去除value末尾的空格、制表符或换行符
     {
       value.resize(value.size()-1);
     }
-    headers_[field] = value;
+    headers_[field] = value;                                                    //将请求头添加到map中
   }
 
   string getHeader(const string& field) const
@@ -173,12 +181,12 @@ class HttpRequest : public muduo::copyable
   }
 
  private:
-  Method method_;
-  Version version_;
-  string path_;
-  string query_;
+  Method method_;//请求方法
+  Version version_;//HTTP版本：HTTP/1.1 or HTTP1.1
+  string path_;//URL问号前面的部分
+  string query_;//URL问号后面的部分
   Timestamp receiveTime_;
-  std::map<string, string> headers_;
+  std::map<string, string> headers_;//请求头
 };
 
 }  // namespace net
