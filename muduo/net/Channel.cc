@@ -44,6 +44,7 @@ Channel::~Channel()
   }
 }
 
+//延长对象的生命期，此处延长了TcpConnection的生命期，使之长过Channel::handleEvent()函数
 void Channel::tie(const std::shared_ptr<void>& obj)                         //有新连接到来时，在TcpConnection的connectEstablished函数中调用，进行生存期控制
 {
   tie_ = obj;                                                               //是把TcpConnection型智能指针存入了Channel之中,tie_是weak_ptr
@@ -65,13 +66,20 @@ void Channel::remove()                                                      //移
                                                                             //处理所有发生的事件，如果活着，底层调用handleEventWithGuard
 void Channel::handleEvent(Timestamp receiveTime)                            //事件到来调用handleEvent处理
 {
+  /*
+   * RAII，对象管理资源
+   * weak_ptr使用lock提升成shared_ptr，此时引用计数加一
+   * 函数返回，栈空间对象销毁，提升的shared_ptr guard销毁，引用计数减一
+   */
   std::shared_ptr<void> guard;                                              //保证线程安全，保证不会调用一个销毁了的对象
   if (tied_)                                                                //这个标志位与TcpConnection有关，在连接建立的时候，该标志位被设置为true，
   {
     guard = tie_.lock();                                                    //如果此时tie_管理的对象不为空，则返回一个shared_ptr，并且保证给tie_赋值的指针不被释放，此时引用计数变为2
     if (guard)
     {
+      LOG_INFO << "Before handleEventWithGurd use_count = " << guard.use_count();
       handleEventWithGuard(receiveTime);
+      LOG_INFO << "After handleEventWithGurd use_count = " << guard.use_count();
     }
   }
   else
@@ -86,7 +94,7 @@ void Channel::handleEventWithGuard(Timestamp receiveTime)
   LOG_TRACE << reventsToString();
   if ((revents_ & POLLHUP) && !(revents_ & POLLIN))                         //判断返回事件类型
   {
-    if (logHup_)                                                            //如果有POLLHUP事件，输出警告信息
+    if (logHup_)                                                            //如果有POLLHUP事件(常见于写端被关闭，在读端会受到POLLHUP)，输出警告信息
     {
       LOG_WARN << "fd = " << fd_ << " Channel::handle_event() POLLHUP";
     }

@@ -114,7 +114,7 @@ class TcpServer : noncopyable
   ConnectionCallback connectionCallback_;                                                        //有一个默认的函数，内部就是输出本地的地址，对端的地址，连接状态
   MessageCallback messageCallback_;                                                              //每个连接的消息处理回调
   WriteCompleteCallback writeCompleteCallback_;
-  ThreadInitCallback threadInitCallback_;                                                        //线程初始化函数
+  ThreadInitCallback threadInitCallback_;                                                        //线程初始化回调函数
   AtomicInt32 started_;                                                                          //启动标记实际上是bool量，只不过用原子操作在0和1之间切换
   // always in loop thread
   int nextConnId_;                                                                               //下一个连接id

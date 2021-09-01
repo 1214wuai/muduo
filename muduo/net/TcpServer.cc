@@ -105,10 +105,12 @@ void TcpServer::newConnection(int sockfd, const InetAddress& peerAddr)
   Print();
 }
 
-void TcpServer::removeConnection(const TcpConnectionPtr& conn)
+void TcpServer::removeConnection(const TcpConnectionPtr& conn)                         //转换调用者为TcpServer
 {
   // FIXME: unsafe
+  LOG_INFO << "before removeConnectionInLoop:"<<conn.use_count();
   loop_->runInLoop(std::bind(&TcpServer::removeConnectionInLoop, this, conn));
+  LOG_INFO << "before removeConnectionInLoop:"<<conn.use_count();
 }
 
 void TcpServer::removeConnectionInLoop(const TcpConnectionPtr& conn)
@@ -116,11 +118,16 @@ void TcpServer::removeConnectionInLoop(const TcpConnectionPtr& conn)
   loop_->assertInLoopThread();
   LOG_INFO << "TcpServer::removeConnectionInLoop [" << name_
            << "] - connection " << conn->name();
-  size_t n = connections_.erase(conn->name());
+  size_t n = connections_.erase(conn->name());                                       //执行完之后，conn的引用计数已降到1
   (void)n;
   assert(n == 1);
   EventLoop* ioLoop = conn->getLoop();
+   LOG_INFO << "Before queueInLoop:"<<conn.use_count();
   ioLoop->queueInLoop(
-      std::bind(&TcpConnection::connectDestroyed, conn));
+      std::bind(&TcpConnection::connectDestroyed, conn));//这里一定要使用queueInLoop,否则就会出现生命期过短的情况
+       // 此处一定要用EventLoop::queueInLoop()，避免Channel对象被提前销毁
+       // 这里用boost::bind让TcpConnection的生命期长到调用connectDestroyed()的时刻
+       // 使用boost::bind得到一个boost::function对象,会把conn传递进去，引用计数会加1，变为2
+  LOG_INFO << "After queueInLoop:"<<conn.use_count();
 }
 

@@ -175,7 +175,7 @@ void TcpConnection::sendInLoop(const void* data, size_t len)                    
   }
 
   assert(remaining <= len);
-  if (!faultError && remaining > 0)                                                     //send调用一次write还没有写完。
+  if (!faultError && remaining > 0)                                                     //如果channel_监听了写事件，或者发送缓冲区有数据，或者send调用一次write还没有写完。
   {
     size_t oldLen = outputBuffer_.readableBytes();
     if (oldLen + remaining >= highWaterMark_
@@ -187,7 +187,8 @@ void TcpConnection::sendInLoop(const void* data, size_t len)                    
     outputBuffer_.append(static_cast<const char*>(data)+nwrote, remaining);           //将剩余的没有写完的数据放入发送缓冲区
     if (!channel_->isWriting())
     {
-      channel_->enableWriting();                                                      //触发可写事件
+      channel_->enableWriting();                                                      //关注可写事件
+      //（会一直可写，一直触发，一直调用handleWrite），直到在handleWrite()中检测到发送缓冲区没有数据了，就会取消关注可写事件
     }
   }
 }
@@ -339,7 +340,7 @@ void TcpConnection::connectDestroyed()                                   //TcpSe
   if (state_ == kConnected)
   {
     setState(kDisconnected);
-    channel_->disableAll();                                             //取消该channel对所有事件的监听
+    channel_->disableAll();                                             //取消该channel对所有事件的监听，与handleClose中一样，因为TcpServer的析构函数可以直接调用connectDestroyed函数
 
     connectionCallback_(shared_from_this());
   }
@@ -357,6 +358,7 @@ void TcpConnection::handleRead(Timestamp receiveTime)
   }
   else if (n == 0)
   {
+    LOG_INFO<<"To handleClose";
     handleClose();
   }
   else
@@ -418,11 +420,12 @@ void TcpConnection::handleClose()                                               
 
   TcpConnectionPtr guardThis(shared_from_this());                                              //C++11中的shared_from_this()来源于boost中的enable_shared_form_this类和shared_from_this()函数，功能为返回一个当前类的std::share_ptr
   connectionCallback_(guardThis);
+  LOG_INFO << "handleClose guardThis use_count:"<<guardThis.use_count();
   // must be the last line
   closeCallback_(guardThis);                                                                   //这个函数会在TcpServer的newConnection被设置，最终执行connectDestroyed()函数
 }
 
-void TcpConnection::handleError()
+void TcpConnection::handleError()                                                              //并没有进一步的行动，知识在LOG中输出错误消息，这不影响连接的正常关闭
 {
   int err = sockets::getSocketError(channel_->fd());
   LOG_ERROR << "TcpConnection::handleError [" << name_

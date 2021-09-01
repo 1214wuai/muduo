@@ -44,7 +44,7 @@ class Socket;
 
 
 
-//该类中使用shared_from_this()，需要继承enable_shared_from_this
+//该类中使用shared_from_this()，拷贝而不是构建一个新的，会使引用计数+1。需要继承enable_shared_from_this
 
 class TcpConnection : noncopyable,
                       public std::enable_shared_from_this<TcpConnection>
@@ -160,7 +160,7 @@ class TcpConnection : noncopyable,
   MessageCallback messageCallback_;                                                        //执行完读操作后，将读缓冲区重置
   WriteCompleteCallback writeCompleteCallback_;                                            //写操作完成之后所执行的回调
   HighWaterMarkCallback highWaterMarkCallback_;
-  CloseCallback closeCallback_;
+  CloseCallback closeCallback_;                                                            //TcpServer和TcpClient专用，用来通知它们移除所持有的TcpConnectionPtr
   size_t highWaterMark_;
   Buffer inputBuffer_;
   Buffer outputBuffer_; // FIXME: use list<Buffer> as output buffer.

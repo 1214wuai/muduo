@@ -58,7 +58,7 @@ void Acceptor::handleRead()                                                     
   InetAddress peerAddr;
   //FIXME loop until no more
   int connfd = acceptSocket_.accept(&peerAddr);                                                  //从tcp链接队列中取出一个链接，获得已连接套接字
-  //peerAddr的struct sockaddr_in6 addr6_被设置为accept函数的传出参数的值
+  //peerAddr的struct sockaddr_in6 addr6_被设置为accept函数的传出参数的值，也就是客户端的IP地址和端口号
   if (connfd >= 0)
   {
     // string hostport = peerAddr.toIpPort();
