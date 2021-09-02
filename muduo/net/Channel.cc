@@ -77,9 +77,9 @@ void Channel::handleEvent(Timestamp receiveTime)                            //事
     guard = tie_.lock();                                                    //如果此时tie_管理的对象不为空，则返回一个shared_ptr，并且保证给tie_赋值的指针不被释放，此时引用计数变为2
     if (guard)
     {
-      LOG_INFO << "Before handleEventWithGurd use_count = " << guard.use_count();
+      LOG_INFO << "Before handleEventWithGurd use_count = " << guard.use_count();//2
       handleEventWithGuard(receiveTime);
-      LOG_INFO << "After handleEventWithGurd use_count = " << guard.use_count();
+      LOG_INFO << "After handleEventWithGurd use_count = " << guard.use_count();//2
     }
   }
   else

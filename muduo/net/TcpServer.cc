@@ -93,6 +93,7 @@ void TcpServer::newConnection(int sockfd, const InetAddress& peerAddr)
                                           sockfd,
                                           localAddr,
                                           peerAddr));                                  //构建TcpConnectionPtr，share_ptr
+  Print();//此时所有的连接的引用计数都是1
   connections_[connName] = conn;                                                       //将新连接加入map中
   conn->setConnectionCallback(connectionCallback_);                                    //如果没有特别设置，将会会调用默认的，打印一些信息
   conn->setMessageCallback(messageCallback_);                                          //设置读事件处理回调函数
@@ -102,32 +103,38 @@ void TcpServer::newConnection(int sockfd, const InetAddress& peerAddr)
 
   // 让ioLoop的channel监听这个连接
   ioLoop->runInLoop(std::bind(&TcpConnection::connectEstablished, conn));              //在I/O线程中调用某个函数，该函数可以跨线程调用,传入的是share_ptr
-  Print();
+  Print();//最后一个，也就是目前新增的这一个连接的引用计数是2，因为在当前函数内有conn这个变量，当这个函数退出之后才会变为1
 }
 
 void TcpServer::removeConnection(const TcpConnectionPtr& conn)                         //转换调用者为TcpServer
 {
   // FIXME: unsafe
-  LOG_INFO << "before removeConnectionInLoop:"<<conn.use_count();
+  LOG_INFO << "Before removeConnectionInLoop:"<<conn.use_count();//3
+  Print();//3
   loop_->runInLoop(std::bind(&TcpServer::removeConnectionInLoop, this, conn));
-  LOG_INFO << "before removeConnectionInLoop:"<<conn.use_count();
+  Print();//无输出
+  LOG_INFO << "After removeConnectionInLoop:"<<conn.use_count();//3
 }
 
 void TcpServer::removeConnectionInLoop(const TcpConnectionPtr& conn)
 {
+  Print();//4
   loop_->assertInLoopThread();
   LOG_INFO << "TcpServer::removeConnectionInLoop [" << name_
            << "] - connection " << conn->name();
-  size_t n = connections_.erase(conn->name());                                       //执行完之后，conn的引用计数已降到1
+  LOG_INFO << "Before erase:"<<conn.use_count();//4
+  size_t n = connections_.erase(conn->name());                                       //执行完之后，conn的引用计数减1
+  LOG_INFO << "After  erase:"<<conn.use_count();//3
   (void)n;
   assert(n == 1);
   EventLoop* ioLoop = conn->getLoop();
-   LOG_INFO << "Before queueInLoop:"<<conn.use_count();
+  LOG_INFO << "Before queueInLoop:"<<conn.use_count();//3
   ioLoop->queueInLoop(
       std::bind(&TcpConnection::connectDestroyed, conn));//这里一定要使用queueInLoop,否则就会出现生命期过短的情况
        // 此处一定要用EventLoop::queueInLoop()，避免Channel对象被提前销毁
        // 这里用boost::bind让TcpConnection的生命期长到调用connectDestroyed()的时刻
-       // 使用boost::bind得到一个boost::function对象,会把conn传递进去，引用计数会加1，变为2
-  LOG_INFO << "After queueInLoop:"<<conn.use_count();
+       // 使用boost::bind得到一个boost::function对象,会把conn传递进去，引用计数会加1
+  LOG_INFO << "After queueInLoop:"<<conn.use_count();//4
+  Print();//map里的连接已经被删除，此时不会有输出
 }
 

@@ -420,9 +420,10 @@ void TcpConnection::handleClose()                                               
 
   TcpConnectionPtr guardThis(shared_from_this());                                              //C++11中的shared_from_this()来源于boost中的enable_shared_form_this类和shared_from_this()函数，功能为返回一个当前类的std::share_ptr
   connectionCallback_(guardThis);
-  LOG_INFO << "handleClose guardThis use_count:"<<guardThis.use_count();
+  LOG_INFO << "Befor handleClose guardThis use_count:"<<guardThis.use_count();//引用计数为3，因为上面使用了shared_from_this
   // must be the last line
   closeCallback_(guardThis);                                                                   //这个函数会在TcpServer的newConnection被设置，最终执行connectDestroyed()函数
+  LOG_INFO << "After handleClose guardThis use_count:"<<guardThis.use_count();//3
 }
 
 void TcpConnection::handleError()                                                              //并没有进一步的行动，知识在LOG中输出错误消息，这不影响连接的正常关闭
