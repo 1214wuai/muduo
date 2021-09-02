@@ -71,7 +71,7 @@ class Buffer : public muduo::copyable  // 缓存类
   size_t writableBytes() const                                                                // 缓存中可写字节数
   { return buffer_.size() - writerIndex_; }
 
-  size_t prependableBytes() const                                                             // 预留大小
+  size_t prependableBytes() const                                                             // 预留8字节+已读取的字节数
   { return readerIndex_; }
 
   const char* peek() const  //  只读数据（看一眼数据），不会移动读指针                                              获取可读下标

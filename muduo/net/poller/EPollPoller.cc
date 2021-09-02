@@ -67,7 +67,7 @@ Timestamp EPollPoller::poll(int timeoutMs, ChannelList* activeChannels)
   {
     LOG_TRACE << numEvents << " events happened";
     fillActiveChannels(numEvents, activeChannels);
-    if (implicit_cast<size_t>(numEvents) == events_.size())                           //如果返回的事件数目等于当前事件数组大小，就分配2倍空间
+    if (implicit_cast<size_t>(numEvents) == events_.size())                           //如果返回的事件数目等于当前事件数组大小，就分配2倍空间，该数组默认的大小是16，在EpollPoller的构造函数中设置
     {
       events_.resize(events_.size()*2);
     }

@@ -137,7 +137,7 @@ void TcpConnection::sendInLoop(const StringPiece& message)
   sendInLoop(message.data(), message.size());
 }
 
-void TcpConnection::sendInLoop(const void* data, size_t len)                              //发送数据最后实际调用的函数
+void TcpConnection::sendInLoop(const void* data, size_t len)                              //发送数据最后实际调用的函数，如果没有一次写完，会先放入outbuffer中，导致writeIndex后移
 {
   loop_->assertInLoopThread();
   ssize_t nwrote = 0;

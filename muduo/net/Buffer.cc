@@ -64,10 +64,15 @@ ssize_t Buffer::readFd(int fd, int* savedErrno)
 
   //节省一次ioctl系统调用(获取当前有多少可读数据）
   //为什么这么说?因为我们准备了足够大的extrabuf，那么我们就不需要使用ioctl去查看fd有多少可读字节数了
+
+  //保证只调用一次read，不反复调用read导致返回EAGAIN
+  //而且muduo采用的水平触发，保证一次读完
+  //高效，只需要一次系统调用
+  //公平，不会因为某个连接上数据量过大而影响其他连接处理消息
   char extrabuf[65536];
   struct iovec vec[2];                                                                      //使用iovec分配两个连续的缓冲区
   const size_t writable = writableBytes();                                                  //buffer中还剩多少空间可以写
-  vec[0].iov_base = begin()+writerIndex_;                                                   //第一块缓冲区，指向可写空间
+  vec[0].iov_base = begin()+writerIndex_;                                                   //第一块缓冲区，指向buffer的可写空间
   vec[0].iov_len = writable;
   vec[1].iov_base = extrabuf;                                                               //第二块缓冲区，指向栈上空间
   vec[1].iov_len = sizeof extrabuf;
@@ -88,7 +93,7 @@ ssize_t Buffer::readFd(int fd, int* savedErrno)
     writerIndex_ = buffer_.size();                                                          //先更新当前writerIndex，此时的buffer已经写满了，还剩下n-writable的数据在extrabuf中
     append(extrabuf, n - writable);                                                         //然后追加剩余的进入buffer当中
   }
-  // if (n == writable + sizeof extrabuf)
+  // if (n == writable + sizeof extrabuf)//如果读到的字节数==第一块缓冲区的可写字节数+extrabuf，会再次读取一次。
   // {
   //   goto line_30;
   // }
