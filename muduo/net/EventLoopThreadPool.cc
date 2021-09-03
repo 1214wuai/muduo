@@ -43,7 +43,7 @@ void EventLoopThreadPool::start(const ThreadInitCallback& cb)
     snprintf(buf, sizeof buf, "%s%d", name_.c_str(), i);
     EventLoopThread* t = new EventLoopThread(cb, buf);
     threads_.push_back(std::unique_ptr<EventLoopThread>(t));                              //存储I/O线程
-    loops_.push_back(t->startLoop());                                                     //存储每个I/O线程的EventLoop。此时，线程池的每个I/O线程都会去监听文件描述符
+    loops_.push_back(t->startLoop());                                                     //存储每个I/O线程的EventLoop。此时，线程池的每个I/O线程都会启动，去执行EventLoop::loop()监听文件描述符
   }
   if (numThreads_ == 0 && cb)                                                             //线程池的个数为0，则主线程开始监听套接字
   {

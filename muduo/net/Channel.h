@@ -98,8 +98,8 @@ class Channel : noncopyable
   void handleEventWithGuard(Timestamp receiveTime);
 
   static const int kNoneEvent;                                             //0
-  static const int kReadEvent;
-  static const int kWriteEvent;
+  static const int kReadEvent;                                             //读事件
+  static const int kWriteEvent;                                            //写事件
 
   EventLoop* loop_;                                                        //记录所属Eventloop
   const int  fd_;                                                          //文件描述符，但不负责关闭该描述符

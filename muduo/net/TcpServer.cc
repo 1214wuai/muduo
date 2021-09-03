@@ -60,7 +60,7 @@ void TcpServer::start()                                                         
 {
   if (started_.getAndSet(1) == 0)                                                        //将started_当前数值返回，并设置成新传入的值
   {
-    threadPool_->start(threadInitCallback_);                                             //I/O线程池开始工作
+    threadPool_->start(threadInitCallback_);                                             //启动线程池，I/O线程池开始工作
 
     assert(!acceptor_->listening());                                                     //判断是否是监听中
     loop_->runInLoop(
@@ -106,7 +106,7 @@ void TcpServer::newConnection(int sockfd, const InetAddress& peerAddr)
   Print();//最后一个，也就是目前新增的这一个连接的引用计数是2，因为在当前函数内有conn这个变量，当这个函数退出之后才会变为1
 }
 
-void TcpServer::removeConnection(const TcpConnectionPtr& conn)                         //转换调用者为TcpServer
+void TcpServer::removeConnection(const TcpConnectionPtr& conn)                         //转换调用者，从子ioLoop转移到TcpServer的ioLoop线程
 {
   // FIXME: unsafe
   LOG_INFO << "Before removeConnectionInLoop:"<<conn.use_count();//3

@@ -41,18 +41,18 @@ bool Socket::getTcpInfoString(char* buf, int len) const
              "rto=%u ato=%u snd_mss=%u rcv_mss=%u "
              "lost=%u retrans=%u rtt=%u rttvar=%u "
              "sshthresh=%u cwnd=%u total_retrans=%u",
-             tcpi.tcpi_retransmits,  // Number of unrecovered [RTO] timeouts
-             tcpi.tcpi_rto,          // Retransmit timeout in usec
-             tcpi.tcpi_ato,          // Predicted tick of soft clock in usec
-             tcpi.tcpi_snd_mss,
-             tcpi.tcpi_rcv_mss,
-             tcpi.tcpi_lost,         // Lost packets
-             tcpi.tcpi_retrans,      // Retransmitted packets out
-             tcpi.tcpi_rtt,          // Smoothed round trip time in usec
-             tcpi.tcpi_rttvar,       // Medium deviation
-             tcpi.tcpi_snd_ssthresh,
-             tcpi.tcpi_snd_cwnd,
-             tcpi.tcpi_total_retrans);  // Total retransmits for entire connection
+             tcpi.tcpi_retransmits,  // Number of unrecovered [RTO] timeouts      /* 超时重传的次数 */
+             tcpi.tcpi_rto,          // Retransmit timeout in usec                /* 超时时间，单位为微秒*/
+             tcpi.tcpi_ato,          // Predicted tick of soft clock in usec      /* 延时确认的估值，单位为微秒*/
+             tcpi.tcpi_snd_mss,                                                   /* 本端的MSS */
+             tcpi.tcpi_rcv_mss,                                                   /* 对端的MSS */
+             tcpi.tcpi_lost,         // Lost packets                              /* 丢失且未恢复的数据段数 */
+             tcpi.tcpi_retrans,      // Retransmitted packets out                 /* 重传且未确认的数据段数 */
+             tcpi.tcpi_rtt,          // Smoothed round trip time in usec          /* 平滑的RTT，单位为微秒 */
+             tcpi.tcpi_rttvar,       // Medium deviation                          /* 四分之一mdev，单位为微秒v */
+             tcpi.tcpi_snd_ssthresh,                                              /* 慢启动阈值 */
+             tcpi.tcpi_snd_cwnd,                                                  /* 拥塞窗口 */
+             tcpi.tcpi_total_retrans);  // Total retransmits for entire connection/* 本连接的总重传个数 */
   }
   return ok;
 }

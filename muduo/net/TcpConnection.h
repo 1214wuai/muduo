@@ -76,11 +76,11 @@ class TcpConnection : noncopyable,
   string getTcpInfoString() const;
                                                                                               //发送数据
   // void send(string&& message); // C++11
-  void send(const void* message, int len);
+  void send(const void* message, int len);                                                  //可跨线程调用，但其内部的sendInLoop会通过EventLoop::runInLoop保证只在IO线程执行
   void send(const StringPiece& message);
   // void send(Buffer&& message); // C++11
   void send(Buffer* message);  // this one will swap data
-  void shutdown(); // NOT thread safe, no simultaneous calling
+  void shutdown(); // NOT thread safe, no simultaneous calling                          //可跨线程调用
   // void shutdownAndForceCloseAfter(double seconds); // NOT thread safe, no simultaneous calling
   void forceClose();                                                                         //强制关闭连接
   void forceCloseWithDelay(double seconds);                                                  //延后强制关闭连接
@@ -108,7 +108,7 @@ class TcpConnection : noncopyable,
   void setWriteCompleteCallback(const WriteCompleteCallback& cb)                             //写操作完成时执行的回调函数
   { writeCompleteCallback_ = cb; }
 
-  void setHighWaterMarkCallback(const HighWaterMarkCallback& cb, size_t highWaterMark)//设置高水位
+  void setHighWaterMarkCallback(const HighWaterMarkCallback& cb, size_t highWaterMark)//设置高水位回调
   { highWaterMarkCallback_ = cb; highWaterMark_ = highWaterMark; }
 
   /// Advanced interface
@@ -159,7 +159,7 @@ class TcpConnection : noncopyable,
   ConnectionCallback connectionCallback_;                                                  //初次建立连接成功时或者销毁时的会执行的回调函数
   MessageCallback messageCallback_;                                                        //执行完读操作后，将读缓冲区重置
   WriteCompleteCallback writeCompleteCallback_;                                            //写操作完成之后所执行的回调
-  HighWaterMarkCallback highWaterMarkCallback_;
+  HighWaterMarkCallback highWaterMarkCallback_;                                            //在sendInLoop中调用
   CloseCallback closeCallback_;                                                            //TcpServer和TcpClient专用，用来通知它们移除所持有的TcpConnectionPtr
   size_t highWaterMark_;
   Buffer inputBuffer_;

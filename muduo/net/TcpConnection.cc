@@ -180,7 +180,7 @@ void TcpConnection::sendInLoop(const void* data, size_t len)                    
     size_t oldLen = outputBuffer_.readableBytes();
     if (oldLen + remaining >= highWaterMark_
         && oldLen < highWaterMark_
-        && highWaterMarkCallback_)                                                     //如果发送缓冲区中的可读数据+剩余的没发的数据长度就可以>=高水位。并且高水位回调函数已注册
+        && highWaterMarkCallback_)                                                     //如果发送缓冲区中的可读数据+剩余的没发的数据长度就可以>=高水位(64*1024*1024)。并且高水位回调函数已注册
     {
       loop_->queueInLoop(std::bind(highWaterMarkCallback_, shared_from_this(), oldLen + remaining));//将高水位回调函数放入EventLoop的用户回调队列中，等待执行
     }

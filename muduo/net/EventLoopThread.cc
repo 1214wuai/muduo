@@ -61,15 +61,15 @@ void EventLoopThread::threadFunc()
 {
   EventLoop loop;
 
-  if (callback_)                                                                   //线程初始化回调
+  if (callback_)                       //线程初始化回调
   {
-    callback_(&loop);                                                              //构造函数传递进来的，线程启动执行回调函数
+    callback_(&loop);                  //构造函数传递进来的，线程启动执行回调函数
   }
 
   {
     MutexLockGuard lock(mutex_);
-    loop_ = &loop;                                                                 //然后loop_指针指向了这个创建的栈上的对象，threadFunc退出之后，这个指针就失效了，EventLoopThread自动析构
-    cond_.notify();  //通知等待的执行流，表示条件已经达成，loop_不为空了
+    loop_ = &loop;                     //然后loop_指针指向了这个创建的栈上的对象，threadFunc退出之后，这个指针就失效了，EventLoopThread自动析构
+    cond_.notify();                    //通知等待的执行流，表示条件已经达成，loop_不为空了
 
   }
 
