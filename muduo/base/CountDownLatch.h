@@ -9,7 +9,7 @@
 #include "muduo/base/Condition.h"
 #include "muduo/base/Mutex.h"
 /*
- * CountDownLatch可以使一个获多个线程等待其他线程各自执行完毕后再执行。
+ * CountDownLatch可以使一个或多个线程等待其他线程各自执行完毕后再执行。
  * CountDownLatch 定义了一个计数器，和一个阻塞队列， 当计数器的值递减为0之前，阻塞队列里面的线程处于挂起状态，
  * 当计数器递减到0时会唤醒阻塞队列所有线程，这里的计数器是一个标志，可以表示一个任务一个线程，也可以表示一个倒计时器，
  * CountDownLatch可以解决那些一个或者多个线程在执行之前必须依赖于某些必要的前提业务先执行的场景。

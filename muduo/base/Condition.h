@@ -30,7 +30,11 @@ class Condition : noncopyable
   void wait()
   {
     MutexLock::UnassignGuard ug(mutex_);
+    //进入wait时，先解锁（构造UnassignGuard类），退出wait时（析构UnassignGuard类），上锁。
+    //这里所说的上锁，是对MutexLock类形式上的上锁，通过改变holder_的值来实现形式上的上锁
     MCHECK(pthread_cond_wait(&pcond_, mutex_.getPthreadMutex()));
+    //一定要与一个互斥量相互使用。进入pthread_cond_wait()函数后，先上锁，
+    //再将此线程挂到等待的队列中，然后解锁。直到满足条件，此线程会被唤醒，唤醒后先上锁，再退出pthread_cond_wait()函数。
   }
 
   // returns true if time out, false otherwise.

@@ -230,6 +230,10 @@ class CAPABILITY("mutex") MutexLock : noncopyable
  private:
   friend class Condition;
 
+  //UnassignGuard在condition中使用
+  /*
+  在pthread_cond_wait()前构造该类，将锁的持有者清零，在pthread_cond_wait()返回后调用该类的析构函数，重新占用锁时将锁的持有者该为当前线程。
+  */
   class UnassignGuard : noncopyable
   {
    public:
@@ -293,5 +297,9 @@ class SCOPED_CAPABILITY MutexLockGuard : noncopyable
 // MutexLockGuard(mutex_);
 // A tempory object doesn't hold the lock for long!
 #define MutexLockGuard(x) error "Missing guard object name"
+//防止出现MutexlockGuard(mutex);形式的调用，遗漏变量名，产生一个临时变量又马上销毁了，导致锁不住临界区
+//正确的调用：MutexlockGuard lock(mutex)
+//临界区
+
 
 #endif  // MUDUO_BASE_MUTEX_H

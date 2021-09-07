@@ -100,6 +100,7 @@ void Socket::setReuseAddr(bool on)
   ::setsockopt(sockfd_, SOL_SOCKET, SO_REUSEADDR,  // SO_REUSEADDR复用地址
                &optval, static_cast<socklen_t>(sizeof optval));
   //如果是TRUE，套接字就可与一个正由其他套接字使用的地址绑定到一起，或与处在TIME_WAIT状态的地址绑定到一起
+  //如果是服务器主动断开连接，进入TIME_WAIT，此时不能绑定成功，可以用SO_REUSEADDR让释放的端口能够立即再次使用
   // FIXME CHECK
 }
 
