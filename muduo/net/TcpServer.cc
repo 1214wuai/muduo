@@ -26,7 +26,7 @@ TcpServer::TcpServer(EventLoop* loop,
   : loop_(CHECK_NOTNULL(loop)),                                                            //外部传入的一个EventLoop，检查不为空
     ipPort_(listenAddr.toIpPort()),                                                        //绑定的地址
     name_(nameArg),                                                                        //服务名称
-    acceptor_(new Acceptor(loop, listenAddr, option == kReusePort)),                       //构造一个Acceptor对象，kReusPort，打开了SO_REUSEPORT，可以解决惊群问题
+    acceptor_(new Acceptor(loop, listenAddr, option == kReusePort)),                       //构造一个Acceptor对象，kReusPort，默认没有SO_REUSEPORT，可以解决惊群问题
     threadPool_(new EventLoopThreadPool(loop, name_)),                                     //构造一个I/O线程池对象
     connectionCallback_(defaultConnectionCallback),
     messageCallback_(defaultMessageCallback),                                              //将buffer中的读索引和写索引重置
