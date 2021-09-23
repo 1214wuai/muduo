@@ -56,7 +56,7 @@ class LengthHeaderCodec : muduo::noncopyable
     buf.append(message.data(), message.size());
     int32_t len = static_cast<int32_t>(message.size());
     int32_t be32 = muduo::net::sockets::hostToNetwork32(len);
-    buf.prepend(&be32, sizeof be32);
+    buf.prepend(&be32, sizeof be32);//将buffer的前面预留的4个字节用来存放message的长度，解决黏包问题
     conn->send(&buf);
   }
 

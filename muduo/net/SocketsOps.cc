@@ -180,7 +180,7 @@ int sockets::accept(int sockfd, struct sockaddr_in6* addr)
 #else
   int connfd = ::accept4(sockfd, sockaddr_cast(addr),
                          &addrlen, SOCK_NONBLOCK | SOCK_CLOEXEC);
-  //accept4()是非标准Linux扩展
+  //accept4()是非标准Linux扩展，比accept多一个flag参数，如果为0则和
 #endif
   if (connfd < 0)
   {

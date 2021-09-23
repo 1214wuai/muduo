@@ -102,7 +102,7 @@ void TcpServer::newConnection(int sockfd, const InetAddress& peerAddr)
       std::bind(&TcpServer::removeConnection, this, _1)); // FIXME: unsafe             //在TcpConnection的handleClose函数中执行
 
   // 让ioLoop的channel监听这个连接
-  ioLoop->runInLoop(std::bind(&TcpConnection::connectEstablished, conn));              //在I/O线程中调用某个函数，该函数可以跨线程调用,传入的是share_ptr
+  ioLoop->runInLoop(std::bind(&TcpConnection::connectEstablished, conn));              //在I/O线程中调用某个函数，该函数可以跨线程调用,传入的是share_ptr。connectEstablished函数会让ioloop监听该socket
   Print();//最后一个，也就是目前新增的这一个连接的引用计数是2，因为在当前函数内有conn这个变量，当这个函数退出之后才会变为1
 }
 
